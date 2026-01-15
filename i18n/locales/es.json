@@ -1,0 +1,18 @@
+{
+  "nav": {
+    "dashboard": "Panel",
+    "checkin": "Chequeo diario",
+    "habits": "Hábitos",
+    "science": "Ciencia",
+    "reports": "Informes",
+    "settings": "Ajustes"
+  },
+  "dashboard": {
+    "headline": "Tu día holístico de un vistazo",
+    "sub": "Sueño, estado de ánimo, estrés y hábitos en una vista enfocada."
+  },
+  "checkin": {
+    "title": "Chequeo diario",
+    "subtitle": "Un ritual de 2 minutos para registrar cómo dormiste, te sientes y te moviste hoy."
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "checkin": "Daily check-in",
+    "habits": "Habits",
+    "science": "Science",
+    "reports": "Reports",
+    "settings": "Settings"
+  },
+  "dashboard": {
+    "headline": "Your holistic day at a glance",
+    "sub": "Sleep, mood, stress and habits – all in one focused view."
+  },
+  "checkin": {
+    "title": "Daily check-in",
+    "subtitle": "A 2-minute ritual to log how you slept, feel and moved today."
+  }
+}
