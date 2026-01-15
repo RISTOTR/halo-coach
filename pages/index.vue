@@ -1,40 +1,80 @@
 <template>
-  <main class="space-y-10">
-    <!-- HERO -->
+  <div class="mx-auto max-w-6xl px-4 py-8 lg:py-10 space-y-8">
     <section
-      class="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-900/80 p-8"
-    >
-      <div
-        class="pointer-events-none absolute inset-0 opacity-50
-               bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.25),transparent_55%),_radial-gradient(circle_at_30%_40%,_rgba(16,185,129,0.18),transparent_60%)]"
-      />
-      <div class="relative z-10 space-y-3">
-        <h1 class="text-2xl font-semibold tracking-tight text-slate-100">
-          Your holistic day at a glance
-        </h1>
-        <p class="max-w-2xl text-sm text-slate-300">
-          A calm overview of your sleep, mood, stress, habits, and AI insights.
-        </p>
+      class="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-emerald-500/15 via-slate-900/90 to-sky-500/20 px-6 py-6 lg:px-8 lg:py-7">
+      <div class="pointer-events-none absolute -right-10 -top-16 h-56 w-56 rounded-full bg-emerald-400/25 blur-3xl" />
+      <div class="pointer-events-none absolute -left-16 bottom-0 h-64 w-64 rounded-full bg-sky-500/20 blur-3xl" />
+
+      <div class="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-200/80">
+            Halo · Daily dashboard
+          </p>
+          <h1 class="mt-1 text-2xl lg:text-3xl font-semibold tracking-tight text-white">
+            Halo, today.
+          </h1>
+          <p class="mt-2 text-sm text-white/70 max-w-xl">
+            Your health, mood & habits at a glance.
+          </p>
+        </div>
+
+        <div class="flex flex-wrap gap-3 text-xs text-white/70">
+          <div class="rounded-full border border-white/15 bg-black/20 px-3 py-1.5">
+            <span class="font-medium text-emerald-200">✓</span>
+            Daily check-in ready
+          </div>
+          <div class="rounded-full border border-white/10 bg-black/10 px-3 py-1.5">
+            AI insights enabled
+          </div>
+        </div>
       </div>
     </section>
 
+    <!-- PRIMER BLOQUE: Snapshot + Insight IA ------------------- -->
+    <section class="grid gap-6 lg:grid-cols-3">
+      <!-- Snapshot ocupa 2/3 -->
+      <div class="lg:col-span-2">
+        <div v-if="loading" class="text-sm text-slate-400">
+          Loading today’s snapshot…
+        </div>
+
+        <div v-else-if="!metrics" class="text-sm text-slate-400">
+          No check-in yet today.
+          <NuxtLink to="/check-in" class="text-emerald-300 hover:underline ml-1">
+            Complete your daily check-in →
+          </NuxtLink>
+        </div>
+
+        <DailySnapshotCard v-else :mood-score="metrics.mood" :energy-score="metrics.energy"
+          :sleep-hours="metrics.sleep_hours" :sleep-quality="metrics.sleep_quality || 0" :stress-level="metrics.stress"
+          :habits-completed="completedHabitsCount" :habits-total="todayHabitsCount"></DailySnapshotCard>
+      </div>
+
+      <!-- Insight IA a la derecha -->
+      <div>
+        <div>DailyInsightCard</div>
+        <!-- <DailyInsightCard /> -->
+      </div>
+    </section>
+
+
+    <!-- SEGUNDO BLOQUE: Hábitos + Tendencias ------------------- -->
+    <!-- <section class="grid gap-6 lg:grid-cols-2">
+      <RecentHabitsCard />
+      <WeeklyTrendsMiniCard />
+    </section> -->
+
     <!-- TODAY SNAPSHOT -->
-    <section class="rounded-xl border border-white/10 bg-slate-900/80 p-6">
+    <!-- <section class="rounded-xl border border-white/10 bg-slate-900/80 p-6">
       <h2 class="text-lg font-semibold text-slate-100 mb-3">
         Today’s snapshot
       </h2>
 
-      <div
-        v-if="loading"
-        class="text-sm text-slate-400"
-      >
+      <div v-if="loading" class="text-sm text-slate-400">
         Loading today’s metrics…
       </div>
 
-      <div
-        v-else-if="!metrics"
-        class="text-sm text-slate-400"
-      >
+      <div v-else-if="!metrics" class="text-sm text-slate-400">
         No check-in yet today.
         <NuxtLink to="/check-in" class="text-emerald-300 hover:underline ml-1">
           Complete your daily check-in →
@@ -49,7 +89,7 @@
         <DashboardMetric label="Steps" :value="metrics.steps" />
         <DashboardMetric label="Water (L)" :value="metrics.water_liters" />
       </div>
-    </section>
+    </section> -->
 
     <!-- HABITS -->
     <section class="rounded-xl border border-white/10 bg-slate-900/80 p-6">
@@ -57,10 +97,7 @@
         Habit progress
       </h2>
 
-      <div
-        v-if="habitsLoading"
-        class="text-sm text-slate-400"
-      >
+      <div v-if="habitsLoading" class="text-sm text-slate-400">
         Loading habits…
       </div>
 
@@ -72,10 +109,7 @@
       </div>
 
       <div v-else class="grid gap-4 sm:grid-cols-2 md:grid-cols-3 text-xs">
-        <div
-          v-for="h in habits.slice(0, 3)" :key="h.id"
-          class="rounded-xl border border-white/10 bg-slate-900/90 p-4"
-        >
+        <div v-for="h in habits.slice(0, 3)" :key="h.id" class="rounded-xl border border-white/10 bg-slate-900/90 p-4">
           <div class="flex items-center justify-between">
             <span class="font-medium text-slate-100">{{ h.name }}</span>
             <span class="text-[10px] text-slate-400">
@@ -96,17 +130,11 @@
         Weekly trends
       </h2>
 
-      <div
-        v-if="trendLoading"
-        class="text-sm text-slate-400"
-      >
+      <div v-if="trendLoading" class="text-sm text-slate-400">
         Loading weekly trends…
       </div>
 
-      <div
-        v-else
-        class="grid gap-6 md:grid-cols-3"
-      >
+      <div v-else class="grid gap-6 md:grid-cols-3">
         <MiniTrendCard title="Sleep" :points="sleepSeries" />
         <MiniTrendCard title="Mood" :points="moodSeries" />
         <MiniTrendCard title="Stress" :points="stressSeries" />
@@ -136,12 +164,14 @@
         </p>
       </div>
     </section>
-  </main>
+  </div>
 </template>
 
 <script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
 import DashboardMetric from '~/components/dashboard/DashboardMetric.vue'
 import MiniTrendCard from '~/components/dashboard/MiniTrendCard.vue'
+import DailySnapshotCard from '~/components/dashboard/DailySnapshotCard.vue'
 
 const supabase = useSupabaseClient()
 const user = useSupabaseUser()
@@ -163,6 +193,12 @@ const trendLoading = ref(true)
 // AI insight
 const aiSummary = ref('')
 const aiLoading = ref(true)
+
+const completedHabitsCount = computed(() =>
+  habits.value.filter((h) => h.completed_today).length
+)
+
+const todayHabitsCount = computed(() => habits.value.length)
 
 // load everything on mount
 onMounted(() => {
@@ -206,16 +242,16 @@ async function loadHabits() {
     return
   }
 
-  const { data } = await supabase
-    .from('habits')
-    .select('*')
-    .eq('user_id', currentUser.id)
-    .eq('archived', false)
-    .order('created_at')
+  const today = new Date().toISOString().slice(0, 10)
 
-  habits.value = data || []
+  const data = await $fetch('/api/habits/today', {
+    query: { date: today }
+  })
+
+  habits.value = (data as any[]) || []
   habitsLoading.value = false
 }
+
 
 async function loadTrends() {
   trendLoading.value = true
