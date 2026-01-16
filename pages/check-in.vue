@@ -32,10 +32,14 @@
               class="w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400/70" />
           </div>
           <div>
-            <label class="mb-1 block text-slate-300">Steps</label>
-            <input v-model.number="steps" type="number" min="0"
-              class="w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400/70" />
-          </div>
+  <label class="mb-1 block text-slate-300">Movement / exercise (min)</label>
+  <input
+    v-model.number="steps"
+    type="number"
+    min="0"
+    class="w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400/70"
+  />
+</div>
         </div>
 
         <div class="grid grid-cols-3 gap-3 text-xs">
@@ -155,9 +159,10 @@
         AI daily summary
       </h2>
       <p class="text-[11px] text-slate-400">
-        Once you save today’s check-in, your AI coach will summarise how your day
-        looked and what to focus on.
-      </p>
+  After saving today’s check-in, Halo writes a short reflection on your day
+  and one or two gentle ideas for tomorrow. You can update your check-in again
+  later today to refresh this summary.
+</p>
 
       <div v-if="loadingSummary" class="text-[11px] text-slate-300">
         Generating your summary…
@@ -196,6 +201,7 @@ const energy = ref<number | null>(null)
 const stress = ref<number | null>(null)
 const waterLiters = ref<number | null>(null)
 const outdoorMinutes = ref<number | null>(null)
+
 const note = ref('')
 
 const saving = ref(false)
@@ -204,6 +210,27 @@ const loadingSummary = ref(false)
 const summary = ref<string>('')
 
 const user = useSupabaseUser()
+
+const habitsSummary = computed(() => {
+  const completed = habits.value.filter(h => selectedHabitIds.value.includes(h.id))
+
+  if (!completed.length) return 'No habits completed today.'
+
+  return completed
+    .map(h => `- ${h.name} (${h.frequency})`)
+    .join('\n')
+})
+
+const habitsStatus = computed(() => {
+  const total = habits.value.length
+  const completedCount = habits.value.filter(h =>
+    selectedHabitIds.value.includes(h.id)
+  ).length
+
+  if (!total) return 'No habits defined yet.'
+
+  return `${completedCount} / ${total} habits completed today.`
+})
 
 watch(
   user,
@@ -236,7 +263,9 @@ const handleSubmit = async () => {
       energy: energy.value,
       stress: stress.value,
       water_liters: waterLiters.value,
-      outdoor_minutes: outdoorMinutes.value
+      outdoor_minutes: outdoorMinutes.value,
+       habits_summary: habitsSummary.value,
+  habits_status: habitsStatus.value
     }
 
 
@@ -312,7 +341,63 @@ async function loadHabitsForToday() {
   habitsLoading.value = false
 }
 
+async function loadTodayCheckin() {
+  const { data: userData } = await supabase.auth.getUser()
+  const currentUser = userData.user
+  if (!currentUser) return
+
+  // 1) cargar métricas del día
+  const { data: metrics } = await supabase
+    .from('daily_metrics')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .eq('date', today)
+    .maybeSingle()
+
+  if (metrics) {
+    sleepHours.value = metrics.sleep_hours
+    steps.value = metrics.steps
+    mood.value = metrics.mood
+    energy.value = metrics.energy
+    stress.value = metrics.stress
+    waterLiters.value = metrics.water_liters
+    outdoorMinutes.value = metrics.outdoor_minutes
+  }
+
+  // 2 cargar reflection si ya existe
+  const { data: reflection } = await supabase
+    .from('journal_entries')
+    .select('content')
+    .eq('user_id', currentUser.id)
+    .eq('date', today)
+    .eq('type', 'evening')
+    .maybeSingle()
+
+  if (reflection?.content) {
+    note.value = reflection.content
+    statusMessage.value = 'Reflect already written for today.'
+  }
+
+console.log(reflection)
+
+  // 3) cargar resumen IA si ya existe
+  const { data: report } = await supabase
+    .from('ai_reports')
+    .select('content')
+    .eq('user_id', currentUser.id)
+    .eq('date', today)
+    .eq('period', 'daily')
+    .maybeSingle()
+
+  if (report?.content) {
+    summary.value = report.content
+    statusMessage.value = 'Summary already generated for today.'
+  }
+}
+
+
 onMounted(() => {
   loadHabitsForToday()
+  loadTodayCheckin()
 })
 </script>

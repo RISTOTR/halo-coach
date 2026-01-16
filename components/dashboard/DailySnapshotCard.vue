@@ -6,7 +6,7 @@
     <!-- Header ------------------------------------------------ -->
     <div class="mb-4 flex items-start justify-between gap-3">
       <div>
-        <h2 class="text-sm font-semibold tracking-tight text-white">
+        <h2 class="text-lg font-semibold text-slate-100 mb-3">
           {{ label || "Today’s snapshot" }}
         </h2>
         <p class="mt-1 text-xs text-white/55">

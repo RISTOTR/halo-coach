@@ -5,7 +5,8 @@ export default defineNuxtConfig({
   modules: [
     '@nuxtjs/tailwindcss',
     '@nuxtjs/supabase',
-    '@nuxtjs/i18n'
+    '@nuxtjs/i18n',
+    'nuxt-markdown-render'
   ],
 
   css: ['~/assets/css/tailwind.css'],

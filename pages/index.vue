@@ -7,7 +7,7 @@
 
       <div class="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-200/80">
+          <p class="text-[12px] font-semibold uppercase tracking-[0.24em] text-emerald-200/80">
             Halo · Daily dashboard
           </p>
           <h1 class="mt-1 text-2xl lg:text-3xl font-semibold tracking-tight text-white">
@@ -142,7 +142,7 @@
     </section>
 
     <!-- AI INSIGHT -->
-    <section class="rounded-xl border border-white/10 bg-slate-900/80 p-6">
+    <section class="rounded-2xl border border-white/10 bg-slate-950/60 px-5 py-5 lg:px-6 lg:py-6 shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
       <h2 class="text-lg font-semibold text-slate-100 mb-3">
         AI insight
       </h2>
@@ -164,6 +164,10 @@
         </p>
       </div>
     </section>
+      <WeeklyGoalsCard />
+      <WeeklyAiReportCard />
+    
+
   </div>
 </template>
 
@@ -172,6 +176,8 @@ import { ref, computed, onMounted } from 'vue'
 import DashboardMetric from '~/components/dashboard/DashboardMetric.vue'
 import MiniTrendCard from '~/components/dashboard/MiniTrendCard.vue'
 import DailySnapshotCard from '~/components/dashboard/DailySnapshotCard.vue'
+import WeeklyAiReportCard from '~/components/dashboard/WeeklyAiReportCard.vue'
+import WeeklyGoalsCard from '~/components/dashboard/WeeklyGoalsCard.vue'
 
 const supabase = useSupabaseClient()
 const user = useSupabaseUser()

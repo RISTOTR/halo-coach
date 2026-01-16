@@ -12,7 +12,9 @@
   "dependencies": {
     "@nuxtjs/i18n": "^10.2.1",
     "@nuxtjs/supabase": "^2.0.3",
+    "marked": "^17.0.1",
     "nuxt": "^4.2.2",
+    "nuxt-markdown-render": "^2.1.0",
     "openai": "^6.16.0",
     "vue": "^3.5.26",
     "vue-router": "^4.6.4",
