@@ -14,7 +14,7 @@
             Halo, today.
           </h1>
           <p class="mt-2 text-sm text-white/70 max-w-xl">
-            Your health, mood & habits at a glance.
+            A calm overview of how you’re doing right now.
           </p>
         </div>
 
@@ -94,7 +94,7 @@
     <!-- HABITS -->
     <section class="rounded-xl border border-white/10 bg-slate-900/80 p-6">
       <h2 class="text-lg font-semibold text-slate-100 mb-4">
-        Habit progress
+        Your habits today
       </h2>
 
       <div v-if="habitsLoading" class="text-sm text-slate-400">
@@ -118,7 +118,7 @@
           </div>
 
           <div class="mt-2 text-[10px] text-slate-300">
-            Target: {{ h.target_per_week }} per week
+            Aim: {{ h.target_per_week }} this week
           </div>
         </div>
       </div>
@@ -127,7 +127,7 @@
     <!-- WEEKLY TRENDS -->
     <section class="rounded-xl border border-white/10 bg-slate-900/80 p-6">
       <h2 class="text-lg font-semibold text-slate-100 mb-4">
-        Weekly trends
+        Patterns this week
       </h2>
 
       <div v-if="trendLoading" class="text-sm text-slate-400">
@@ -144,7 +144,7 @@
     <!-- AI INSIGHT -->
     <section class="rounded-2xl border border-white/10 bg-slate-950/60 px-5 py-5 lg:px-6 lg:py-6 shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
       <h2 class="text-lg font-semibold text-slate-100 mb-3">
-        AI insight
+        Today’s reflection
       </h2>
 
       <div v-if="aiLoading" class="text-sm text-slate-400">
@@ -152,7 +152,7 @@
       </div>
 
       <div v-else-if="!aiSummary" class="text-sm text-slate-400">
-        No AI insight yet.
+        No reflection yet.
         <NuxtLink to="/check-in" class="text-emerald-300 hover:underline ml-1">
           Complete your daily check-in →
         </NuxtLink>

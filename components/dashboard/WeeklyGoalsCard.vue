@@ -10,7 +10,7 @@
           Weekly goals
         </h2>
         <p class="mt-1 text-[11px] text-slate-400">
-          2–4 small focuses for this week. You can adjust them anytime.
+          A few gentle focuses for this week. You can change them anytime.
         </p>
       </div>
       <div class="text-[10px] text-slate-400">
@@ -80,7 +80,7 @@
       <div class="mt-3 rounded-lg border border-dashed border-white/15 bg-slate-950/60 px-3 py-3">
         <div class="mb-1 flex items-center justify-between">
           <p class="text-[12px] font-medium text-slate-100">
-            Suggestions from Halo
+            Gentle suggestions from Halo
           </p>
           <button
             class="rounded-full border border-emerald-500/60 bg-emerald-500/10 px-3 py-0.5 text-[10px] font-medium text-emerald-100 hover:bg-emerald-500/20 disabled:opacity-50"
@@ -92,7 +92,7 @@
           </button>
         </div>
         <p class="mb-2 text-[10px] text-slate-400">
-          Based on your week’s data and reflection, Halo can propose 2–3 gentle goals. You can add or ignore them.
+          Based on how your week actually felt, Halo can suggest a few gentle goals.
         </p>
 
         <div v-if="suggestionsError" class="text-[10px] text-red-300">
@@ -138,7 +138,7 @@
           :disabled="saving"
         >
           <span v-if="saving">Saving…</span>
-          <span v-else>Save weekly goals</span>
+          <span v-else>Save goals</span>
         </button>
       </div>
     </div>

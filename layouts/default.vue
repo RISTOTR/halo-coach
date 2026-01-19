@@ -48,13 +48,25 @@
         </div>
       </header>
 
-      <main class="mx-auto max-w-5xl px-4 py-6 relative z-10">
-        <slot />
+      <main class="mx-auto max-w-5xl px-4 py-6 relative z-10"> <div>
+    <OnboardingModal
+  v-if="!loading && showOnboarding"
+  @close="completeOnboarding"
+/>
+
+
+    <slot />
+  </div>
       </main>
     </div>
   </div>
+ 
 </template>
 <script setup lang="ts">
+import OnboardingModal from '~/components/OnboardingModal.vue'
+import { useOnboarding } from '~/composables/useOnboarding'
+
+const { showOnboarding, loadOnboardingStatus, completeOnboarding } = useOnboarding()
 const user = useSupabaseUser()
 const supabase = useSupabaseClient()
 
@@ -62,4 +74,7 @@ const handleLogout = async () => {
   await supabase.auth.signOut()
   navigateTo('/auth')
 }
+onMounted(() => {
+  loadOnboardingStatus()
+})
 </script>

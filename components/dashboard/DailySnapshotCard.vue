@@ -176,7 +176,7 @@ const dayLabel = computed(() => {
 
   if (ratio >= 0.8) return 'Strong day'
   if (ratio >= 0.4) return 'In progress'
-  return 'Just getting started'
+  return 'Plenty of room today'
 })
 
 const moodEmoji = computed(() => {
@@ -199,7 +199,7 @@ const moodText = computed(() => {
 
 const moodHeadline = computed(() => {
   const score = props.moodScore ?? 3
-  if (score >= 4) return 'Today feels balanced and in a good direction.'
+  if (score >= 4) return 'Today feels fairly balanced, with room to adjust as you go.'
   if (score >= 3) return 'A steady day with space to adjust.'
   return 'A gentler day — go slow and be kind to yourself.'
 })

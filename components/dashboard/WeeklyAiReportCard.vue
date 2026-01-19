@@ -8,14 +8,14 @@
           Weekly AI reflection
         </h2>
         <p class="mt-1 text-[11px] text-slate-400">
-          A gentle look at your last 7 days and 2–3 ideas for the week ahead.
+          A thoughtful look at your week, and a few ideas for what might help next.
         </p>
       </div>
       <button
         class="rounded-full border border-emerald-500/60 bg-emerald-500/10 px-3 py-1 text-[10px] font-medium text-emerald-100 hover:bg-emerald-500/20 disabled:opacity-50"
         @click="refresh" :disabled="loading">
         <span v-if="loading">Updating…</span>
-        <span v-else>Refresh</span>
+        <span v-else>Re-reflect on this week</span>
       </button>
     </div>
 
