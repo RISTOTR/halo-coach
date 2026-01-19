@@ -227,6 +227,10 @@ ${lines.join('\n')}
 `.trim()
   }
 
+const habitNames = (habits || []).map(h => h.name).join(', ') || 'None'
+const goalTitles = (weeklyGoals || []).map(g => g.title).join(' | ') || 'None'
+
+
   // 5) Montar texto para la IA
   const metricsSummaryText = JSON.stringify(weeklyAggregates, null, 2)
 
@@ -249,6 +253,10 @@ ${journalSnippets}
 Weekly goals for this week (including their status):
 ${goalsText}
 
+Available habit names (use these exact names when mentioning habits): ${habitNames}
+Weekly goal titles (use exact titles when referring to goals): ${goalTitles}
+
+
 You are Halo, a calm, grounded, emotionally intelligent wellbeing coach.
 Your task is to write a weekly reflection based on the user’s last 7 days:
 - daily metrics (sleep, movement, mood, energy, stress, outdoor time, hydration)
@@ -265,7 +273,22 @@ STYLE & STRUCTURE
 - Maximum ~230 words.
 - Avoid bullet points.
 - Keep a warm, human tone — never patronizing or overly optimistic.
-- You MUST use Markdown bold (**text**) to emphasise key insights, habits, goals, or emotional themes.
+FORMATTING (Markdown)
+- You MUST use Markdown formatting.
+- Use **bold** exactly 2–4 times to highlight the most important themes:
+  • key weekly goals (or goal themes)
+  • habit names (use the exact habit name if available)
+  • recovery theme (rest, lowering pressure) if relevant
+- Use *italics* 1–2 times to underline emotional nuance (e.g. *low motivation*, *quiet hope*, *tired but trying*).
+- Do not bold or italicize numbers.
+- Do not overuse formatting: keep it subtle and intentional.
+- When highlighting habits or goals, prefer the exact names provided in the data (habits list, goals list) so the user recognizes them.
+- Keep bold spans short (2–6 words). Prefer nouns/phrases like “**rest & recovery**” or “**meditation sessions**”.
+- Avoid placing multiple bold phrases in the same sentence. Spread them across the paragraph if possible.
+- Prefer bolding actions, habits, or goals over states. 
+  (e.g. bold “Meditation on 3 days” rather than “low motivation”).
+- Use italics as if you are gently naming the user’s inner experience or self-talk.
+
 
 WHAT TO EMPHASIZE
 - Speak about the **week as a whole**. Not every day.

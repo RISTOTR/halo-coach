@@ -98,8 +98,13 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.halo-weekly-summary strong {
+.halo-weekly-summary :deep(strong) {
   font-weight: 700;
   color: #6ee7b7; /* emerald-300-ish, para que se note bien */
+}
+.halo-weekly-summary :deep(em) {
+  font-style: italic;
+  color: rgba(226, 232, 240, 0.9); /* slate-200-ish */
+  opacity: 0.95;
 }
 </style>
