@@ -8,6 +8,16 @@ const bodySchema = z.object({
   date: z.string() // YYYY-MM-DD
 })
 
+function getWeekStartMonday(dateStr: string) {
+  // dateStr = YYYY-MM-DD
+  const d = new Date(`${dateStr}T00:00:00.000Z`)
+  const day = d.getUTCDay() // 0 Sun .. 6 Sat
+  const diff = (day === 0 ? -6 : 1) - day // move to Monday
+  d.setUTCDate(d.getUTCDate() + diff)
+  return d.toISOString().slice(0, 10)
+}
+
+
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig(event)
 
@@ -34,6 +44,23 @@ export default defineEventHandler(async (event) => {
   const current = new Date(normalizedDate)
   current.setDate(current.getDate() - 1)
   const yesterdayDate = current.toISOString().slice(0, 10)
+
+  const weekStart = getWeekStartMonday(normalizedDate)
+
+// Weekly goals for the current week
+// NOTE: adjust table/columns to your schema.
+// If your table is `weekly_goals`, keep it. If it's `goals`, change it.
+const { data: weeklyGoals, error: goalsError } = await supabase
+  .from('weekly_goals')
+  .select('id, title, status') // add fields if you have them (e.g. target_count)
+  .eq('user_id', user.sub)
+  .eq('week_start', weekStart)
+  .order('created_at', { ascending: true })
+
+if (goalsError) {
+  console.error(goalsError)
+}
+
 
 
   // 1) Daily metrics
@@ -174,38 +201,61 @@ if (yesterdayMetrics || yesterdayJournalEntry) {
   yesterdayContextText = parts.join('\n')
 }
 
+const goalsText =
+  weeklyGoals && weeklyGoals.length
+    ? weeklyGoals
+        .map((g) => `- ${g.title}${g.status ? ` (${g.status})` : ''}`)
+        .join('\n')
+    : 'No weekly goals set.'
+
+
 const prompt = `
 You are Halo, a calm, encouraging health coach.
-Your job is to give the user a short, human, motivating summary of their day and 1–2 gentle focus points for tomorrow.
+Your job is to give the user a short, human, motivating reflection of their day and 1–2 gentle focus points for tomorrow.
 
 Data you have:
 - Date: ${normalizedDate}
-- Core metrics today:
+- Week anchor (Monday): ${weekStart}
+
+- Core metrics:
 ${metricsText}
 
-- Journal / reflection today:
+- Journal / reflection:
 ${journalText}
 
-- Brief context from yesterday (if available):
-${yesterdayContextText}
-
-- Habits today:
+- Habits:
 ${habitsText}
+
+- Weekly goals (context for this week):
+${goalsText}
 
 Guidelines:
 - Write in a warm, grounded tone. Imagine you talk to a thoughtful adult, not a child.
 - DO NOT list every metric or every number. Turn them into ideas.
-- Do NOT always start with sleep. Choose the most relevant or emotionally meaningful element (sleep, stress, habits, or something from the reflection) as the first highlight.
-- Start with 1–2 positive highlights from today (sleep, movement, habits, coping with stress, or something they wrote in their reflection).
-- If yesterday’s context shows effort or progress that contrasts with today (for example: yesterday they pushed themselves a lot and today they are tired), you may briefly acknowledge that pattern.
+- Start with 1–2 positive highlights from today (effort, coping, recovery, a habit, or something in the reflection).
 - If the journal entry mentions emotions, struggles or wins, acknowledge them briefly and kindly.
-- Then give 1–2 concrete, realistic suggestions for tomorrow. Think in tiny steps (e.g., "add one short walk", "protect 10–15 minutes for calm", "one extra glass of water").
-- If the day was already very strong in all metrics, focus on maintenance and self-kindness instead of pushing harder.
+
+GOALS INTEGRATION (important):
+- Weekly goals are context, not a checklist.
+- Mention at most ONE weekly goal (or goal theme) if it naturally supports the user today.
+- If goals feel too ambitious for the user’s energy/sleep/stress, gently suggest shrinking the goal (smaller and kinder).
+- If the user already did something aligned with a goal today, acknowledge it as a small win.
+
+RECOVERY-AWARE:
+- If the user seems tired / stressed / slept poorly, avoid pushing them to do more.
+- In those cases suggest rest, lowering pressure, or one small nourishing action they genuinely enjoy.
+
+FORMATTING (Markdown):
+- Use **bold** 1–3 times to highlight key levers (a habit name, a goal theme, “rest & recovery”).
+- Use *italics* 0–2 times for emotional nuance (e.g. *low motivation*, *quiet hope*).
+- Keep bold spans short (2–6 words). Do not bold numbers.
+
+- Then give 1–2 concrete, realistic suggestions for tomorrow. Think tiny steps.
 - Keep it under 180 words.
-- Do not use bullet points; 2–3 short paragraphs are enough.
-- Avoid generic phrases like "great foundation" or "wonderful for body and mind". Be a bit more specific.
-- You may echo a short idea from the reflection, but paraphrase it instead of quoting it literally.
+- 2–3 short paragraphs. No bullet points.
+- Avoid generic phrases like "great foundation" or "wonderful for body and mind". Be specific.
 `.trim()
+
 
 
   const response = await client.responses.create({

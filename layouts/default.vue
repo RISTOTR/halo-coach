@@ -50,10 +50,9 @@
 
       <main class="mx-auto max-w-5xl px-4 py-6 relative z-10"> <div>
     <OnboardingModal
-  v-if="!loading && showOnboarding"
-  @close="completeOnboarding"
+  v-if="!loading && isModalOpen"
+  @close="handleModalClose"
 />
-
 
     <slot />
   </div>
@@ -65,16 +64,36 @@
 <script setup lang="ts">
 import OnboardingModal from '~/components/OnboardingModal.vue'
 import { useOnboarding } from '~/composables/useOnboarding'
+import { useOnboardingModal } from '~/composables/useOnboardingModal'
 
 const { showOnboarding, loadOnboardingStatus, completeOnboarding } = useOnboarding()
+const { isOpen: manualOpen, close: closeManual } = useOnboardingModal()
+
 const user = useSupabaseUser()
 const supabase = useSupabaseClient()
+
+const loading = ref(true)
+
+const isModalOpen = computed(() => showOnboarding.value || manualOpen.value)
+
+const handleModalClose = async () => {
+  // If it's the first-time onboarding flow, persist completion
+  if (showOnboarding.value) {
+    await completeOnboarding()
+  }
+  // Always close the manual modal
+  closeManual()
+}
 
 const handleLogout = async () => {
   await supabase.auth.signOut()
   navigateTo('/auth')
 }
-onMounted(() => {
-  loadOnboardingStatus()
+
+onMounted(async () => {
+  loading.value = true
+  await loadOnboardingStatus()
+  loading.value = false
 })
 </script>
+
