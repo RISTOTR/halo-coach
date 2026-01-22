@@ -430,7 +430,6 @@ if (reflectionText) {
       method: 'POST',
       body: { date: today }
     })
-    console.log(aiRes)
     aiContent.value = normalizeAiResponse(aiRes)
     statusMessage.value = 'Reflection updated.'
   } catch (e) {

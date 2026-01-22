@@ -1,22 +1,27 @@
 <template>
-  <main class="space-y-6">
+  <div class="mx-auto max-w-6xl px-4 py-8 lg:py-10 space-y-8">
     <!-- Header -->
-    <section class="rounded-2xl border border-white/10 bg-white/5 p-4">
-      <p class="text-[11px] font-semibold uppercase tracking-[0.25em] text-emerald-300">
+    <section
+      class="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-emerald-500/15 via-slate-900/90 to-sky-500/20 px-6 py-6 lg:px-8 lg:py-7">
+      <div class="pointer-events-none absolute -right-10 -top-16 h-56 w-56 rounded-full bg-emerald-400/25 blur-3xl" />
+      <div class="pointer-events-none absolute -left-16 bottom-0 h-64 w-64 rounded-full bg-sky-500/20 blur-3xl" />
+      <div class="relative">
+      <p class="text-xs font-semibold uppercase tracking-[0.25em] text-emerald-300">
         Habits
       </p>
-      <h1 class="mt-1 text-lg font-semibold">
+      <h1 class="mt-1 text-2xl lg:text-3xl font-semibold tracking-tight text-white">
         Your habit system
       </h1>
-      <p class="mt-1 text-xs text-slate-300 max-w-2xl">
+      <p class="mt-1 text-xs text-slate-300">
         Define the small, repeatable actions that support your body, mind, emotions and productivity.
         You’ll see them in your daily check-ins and reports.
       </p>
+      </div>
     </section>
 
     <section class="grid gap-4 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
       <!-- Left: list of habits -->
-      <div class="space-y-3 rounded-2xl border border-white/10 bg-slate-900/90 p-4">
+      <div class="rounded-2xl border border-white/10 bg-slate-950/60 px-5 py-5 lg:px-6 lg:py-6 shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
         <div class="flex items-center justify-between">
           <h2 class="text-sm font-semibold text-slate-100">
             Active habits
@@ -110,7 +115,7 @@
       </div>
 
       <!-- Right: create habit -->
-      <div class="space-y-3 rounded-2xl border border-white/10 bg-slate-900/90 p-4 text-[11px]">
+      <div class="rounded-2xl border border-white/10 bg-slate-950/60 px-5 py-5 lg:px-6 lg:py-6 shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
         <h2 class="text-sm font-semibold text-slate-100">
           New habit
         </h2>
@@ -191,7 +196,7 @@
         </form>
       </div>
     </section>
-  </main>
+  </div>
 </template>
 
 <script setup lang="ts">

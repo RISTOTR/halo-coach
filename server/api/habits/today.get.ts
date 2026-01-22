@@ -1,50 +1,48 @@
-// server/api/habits/today.get.ts
 import { defineEventHandler, getQuery, createError } from 'h3'
+import { z } from 'zod'
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
+
+const querySchema = z.object({
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
+})
 
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)
-  if (!user) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
-  }
+if (!user) throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
+
+const uid = (user as any).id || (user as any).sub
+if (!uid) throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
+
 
   const supabase = await serverSupabaseClient(event)
-  const query = getQuery(event)
+  const { date } = querySchema.parse(getQuery(event))
 
-  const day =
-    (typeof query.date === 'string' && query.date) ||
-    new Date().toISOString().slice(0, 10)
+  // Fetch habits
+ const { data: habits, error: habitsErr } = await supabase
+  .from('habits')
+  .select('id,user_id,name,category,frequency,target_per_week,created_at,archived')
+  .eq('user_id', uid)
+  .or('archived.is.null,archived.eq.false')
+  .order('created_at', { ascending: true })
 
-  // 1) Hábitos activos del usuario
-  const { data: habits, error: habitsError } = await supabase
-    .from('habits')
-    .select('*')
-    .eq('user_id', user.sub)
-    .eq('archived', false)
-    .order('created_at')
+  if (habitsErr) throw createError({ statusCode: 500, statusMessage: habitsErr.message })
 
-  if (habitsError) {
-    console.error(habitsError)
-    throw createError({ statusCode: 500, statusMessage: 'Failed to load habits' })
-  }
+  // Fetch entries for that date
+  const { data: entries, error: entriesErr } = await supabase
+    .from('habit_entries')
+    .select('habit_id,completed')
+    .eq('user_id', uid)
+    .eq('date', date)
 
-  // 2) Logs del día
-  const { data: logs, error: logsError } = await supabase
-    .from('habit_logs')
-    .select('habit_id')
-    .eq('user_id', user.sub)
-    .eq('date', day)
+  if (entriesErr) throw createError({ statusCode: 500, statusMessage: entriesErr.message })
 
-  if (logsError) {
-    console.error(logsError)
-    throw createError({ statusCode: 500, statusMessage: 'Failed to load habit logs' })
-  }
-
-  const completedIds = new Set((logs || []).map((l) => l.habit_id))
+  const completedSet = new Set(
+    (entries || []).filter((e) => e.completed !== false).map((e) => e.habit_id)
+  )
 
   const result = (habits || []).map((h) => ({
     ...h,
-    completed_today: completedIds.has(h.id)
+    completed_today: completedSet.has(h.id)
   }))
 
   return result

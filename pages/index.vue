@@ -1,4 +1,8 @@
 <template>
+  <div v-if="habitError" class="mb-3 rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-xs text-red-200">
+    {{ habitError }}
+  </div>
+
   <div class="mx-auto max-w-6xl px-4 py-8 lg:py-10 space-y-8">
     <section
       class="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-emerald-500/15 via-slate-900/90 to-sky-500/20 px-6 py-6 lg:px-8 lg:py-7">
@@ -31,105 +35,168 @@
     </section>
 
     <!-- Row 1: Snapshot + Insight -->
-  <section class="grid gap-6 lg:grid-cols-3 lg:items-stretch">
-  <!-- LEFT COLUMN (2/3): Snapshot + Habits + Patterns -->
-  <div class="space-y-6 lg:col-span-2">
-    <!-- Snapshot -->
+    <section class="grid gap-6 lg:grid-cols-3 lg:items-stretch">
+      <!-- LEFT COLUMN (2/3): Snapshot + Habits + Patterns -->
+      <div class="space-y-6 lg:col-span-2">
+        <!-- Snapshot -->
+        <div>
+          <div v-if="loading" class="text-sm text-slate-400">
+            Loading today’s snapshot…
+          </div>
+
+          <div v-else-if="!metrics" class="text-sm text-slate-400">
+            No check-in yet today.
+            <NuxtLink to="/check-in" class="text-emerald-300 hover:underline ml-1">
+              Complete your daily check-in →
+            </NuxtLink>
+          </div>
+
+          <DailySnapshotCard v-else :mood-score="metrics.mood" :energy-score="metrics.energy"
+            :sleep-hours="metrics.sleep_hours" :sleep-quality="metrics.sleep_quality || 0"
+            :stress-level="metrics.stress" :habits-completed="completedHabitsCount" :habits-total="todayHabitsCount" />
+        </div>
+
+        <!-- Habits (move here) -->
+        <section class="rounded-2xl border border-white/10 bg-slate-950/60 px-5 py-5 lg:px-6 lg:py-6 shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
+          <div class="flex items-end justify-between gap-3 mb-4">
+            <h2 class="text-lg font-semibold text-slate-100">
+              Your habits today
+            </h2>
+            <div class="text-xs text-white/60">
+              {{ completedHabitsCount }}/{{ todayHabitsCount }} completed
+            </div>
+          </div>
+
+          <div v-if="habitsLoading" class="text-sm text-slate-400">Loading habits…</div>
+
+          <div v-else-if="!habits || habits.length === 0" class="text-sm text-slate-400">
+            No habits yet.
+            <NuxtLink to="/habits" class="text-emerald-300 hover:underline ml-1">
+              Create your first habit →
+            </NuxtLink>
+          </div>
+
+          <div v-else class="grid gap-4 sm:grid-cols-2 md:grid-cols-3 text-xs">
+            <!-- show more than 3 to make the section feel real -->
+            <div v-for="h in habits.slice(0, 6)" :key="h.id" class="group relative rounded-xl border border-white/10 bg-slate-900/90 py-4 px-3 transition
+         hover:bg-slate-900/95 hover:border-white/15">
+              <!-- top row -->
+              <div class="flex items-end gap-3">
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <!-- done indicator -->
+                    <button type="button" class="shrink-0 flex h-6 w-6 items-center justify-center rounded-lg border border-white/10 bg-black/10
+         text-white/70 hover:bg-white/10"
+                      :class="h.completed_today ? 'bg-emerald-500/15 border-emerald-400/20 text-emerald-200' : ''"
+                      :disabled="toggling[h.id]" @click="toggleHabit(h)">
+                      <span v-if="toggling[h.id]" class="text-[10px]">…</span>
+                      <span v-else class="text-[12px] leading-none">
+                        {{ h.completed_today ? '✓' : '' }}
+                      </span>
+                    </button>
+
+                    <span class="min-w-0 flex-1 truncate font-medium text-slate-100" :class="h.completed_today ? 'text-slate-100' : 'text-slate-100'">
+                      {{ h.name }}
+                    </span>
+                  </div>
+
+                  <div class="mt-2 text-[10px] text-slate-300">
+                    Aim: {{ h.target_per_week }} this week
+                  </div>
+                </div>
+
+                <div class="shrink-0 flex flex-col items-end gap-2">
+                  <span class="text-[10px] text-slate-400">
+                    {{ h.frequency === 'daily' ? 'Daily' : 'Weekly' }}
+                  </span>
+
+                  <!-- status pill -->
+                  <span class="rounded-full border px-2 py-0.5 text-[10px]"
+      :class="h.completed_today
+        ? 'border-emerald-400/20 bg-emerald-500/10 text-emerald-200'
+        : 'border-white/10 bg-black/10 text-white/55'">
+                    {{ h.completed_today ? 'Done' : 'Not done' }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- subtle strike / fade effect when done -->
+              <div v-if="h.completed_today"
+                class="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-emerald-500/10" />
+            </div>
+
+          </div>
+        </section>
+
+        <!-- Patterns (move here) -->
+        <!-- Patterns -->
+<section
+  class="rounded-2xl border border-white/10 bg-slate-950/60 px-5 py-5 lg:px-6 lg:py-6 shadow-[0_18px_45px_rgba(0,0,0,0.45)]"
+>
+  <div class="flex items-start justify-between gap-4">
     <div>
-      <div v-if="loading" class="text-sm text-slate-400">
-        Loading today’s snapshot…
-      </div>
-
-      <div v-else-if="!metrics" class="text-sm text-slate-400">
-        No check-in yet today.
-        <NuxtLink to="/check-in" class="text-emerald-300 hover:underline ml-1">
-          Complete your daily check-in →
-        </NuxtLink>
-      </div>
-
-      <DailySnapshotCard
-        v-else
-        :mood-score="metrics.mood"
-        :energy-score="metrics.energy"
-        :sleep-hours="metrics.sleep_hours"
-        :sleep-quality="metrics.sleep_quality || 0"
-        :stress-level="metrics.stress"
-        :habits-completed="completedHabitsCount"
-        :habits-total="todayHabitsCount"
-      />
-    </div>
-
-    <!-- Habits (move here) -->
-    <section class="rounded-xl border border-white/10 bg-slate-900/80 p-6">
-      <div class="flex items-end justify-between gap-3 mb-4">
-        <h2 class="text-lg font-semibold text-slate-100">
-          Your habits today
-        </h2>
-        <div class="text-xs text-white/60">
-          {{ completedHabitsCount }}/{{ todayHabitsCount }} completed
-        </div>
-      </div>
-
-      <div v-if="habitsLoading" class="text-sm text-slate-400">Loading habits…</div>
-
-      <div v-else-if="!habits || habits.length === 0" class="text-sm text-slate-400">
-        No habits yet.
-        <NuxtLink to="/habits" class="text-emerald-300 hover:underline ml-1">
-          Create your first habit →
-        </NuxtLink>
-      </div>
-
-      <div v-else class="grid gap-4 sm:grid-cols-2 md:grid-cols-3 text-xs">
-        <!-- show more than 3 to make the section feel real -->
-        <div
-          v-for="h in habits.slice(0, 6)"
-          :key="h.id"
-          class="rounded-xl border border-white/10 bg-slate-900/90 p-4"
-        >
-          <div class="flex items-center justify-between">
-            <span class="font-medium text-slate-100">{{ h.name }}</span>
-            <span class="text-[10px] text-slate-400">
-              {{ h.frequency === 'daily' ? 'Daily' : 'Weekly' }}
-            </span>
-          </div>
-          <div class="mt-2 text-[10px] text-slate-300">
-            Aim: {{ h.target_per_week }} this week
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Patterns (move here) -->
-    <section class="rounded-xl border border-white/10 bg-slate-900/80 p-6">
-      <h2 class="text-lg font-semibold text-slate-100 mb-4">
+      <h2 class="text-lg font-semibold text-slate-100">
         Patterns this week
       </h2>
+      <p class="mt-1 text-xs text-white/55">
+        Last 7 days · {{ trendDaysCount }} check-ins
+      </p>
+    </div>
 
-      <div v-if="trendLoading" class="text-sm text-slate-400">
-        Loading weekly trends…
-      </div>
-
-      <div v-else class="grid gap-6 md:grid-cols-3">
-        <MiniTrendCard title="Sleep" :points="sleepSeries" />
-        <MiniTrendCard title="Mood" :points="moodSeries" />
-        <MiniTrendCard title="Stress" :points="stressSeries" />
-      </div>
-    </section>
-  </div>
-
-  <!-- RIGHT COLUMN (1/3): Insight (controlled height) -->
-  <div class="lg:col-span-1">
-    <div class="lg:sticky lg:top-24 h-full">
-      <DailyInsightCard
-      :collapsed="true" :max-paragraphs="2"
-        class="max-h-[520px] overflow-auto"
-        :loading="aiLoading"
-        :ai-summary="aiSummary"
-        :metrics="metrics"
-      />
+    <div class="shrink-0 rounded-full border border-white/10 bg-black/20 px-2.5 py-1 text-[10px] text-white/60">
+      {{ trendStatus }}
     </div>
   </div>
+
+  <div v-if="trendLoading" class="mt-4 text-sm text-slate-400">
+    Loading weekly trends…
+  </div>
+
+  <!-- Not enough data -->
+  <div
+    v-else-if="trendDaysCount < 3"
+    class="mt-4 rounded-xl border border-white/10 bg-black/10 p-4"
+  >
+    <div class="text-sm text-slate-200">
+      Not enough data yet.
+    </div>
+    <p class="mt-1 text-xs text-white/55">
+      Add a couple more daily check-ins and Halo will start showing meaningful weekly patterns.
+    </p>
+
+    <div class="mt-3">
+      <NuxtLink
+        to="/check-in"
+        class="inline-flex items-center justify-center rounded-xl border border-white/10 bg-emerald-500/15 px-3 py-2 text-xs font-medium text-emerald-200 hover:bg-emerald-500/20"
+      >
+        Complete check-in →
+      </NuxtLink>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div v-else class="mt-4 grid gap-6 md:grid-cols-3">
+    <MiniTrendCard title="Sleep" :points="sleepSeries" />
+    <MiniTrendCard title="Mood" :points="moodSeries" />
+    <MiniTrendCard title="Stress" :points="stressSeries" />
+  </div>
+
+  <!-- subtle footnote -->
+  <div v-if="!trendLoading && trendDaysCount >= 3" class="mt-4 text-[11px] text-white/40">
+    Tip: trends update after each daily check-in.
+  </div>
 </section>
+
+      </div>
+
+      <!-- RIGHT COLUMN (1/3): Insight (controlled height) -->
+      <div class="lg:col-span-1">
+        <div class="lg:sticky lg:top-24 h-[calc(100vh-25rem)]">
+          <DailyInsightCard :collapsed="true" :max-paragraphs="2" class="h-full" :loading="aiLoading" :error="errors.ai"
+            :ai-summary="aiSummary" :metrics="metrics" />
+        </div>
+      </div>
+    </section>
 
 
 
@@ -168,6 +235,11 @@ const loading = ref(true)
 const habits = ref<any[]>([])
 const habitsLoading = ref(true)
 
+const toggling = ref<Record<string, boolean>>({})
+const habitError = ref('')
+
+
+
 // Weekly trends
 const sleepSeries = ref<MetricPoint[]>([])
 const moodSeries = ref<MetricPoint[]>([])
@@ -186,6 +258,18 @@ const completedHabitsCount = computed(() =>
 )
 const todayHabitsCount = computed(() => habits.value.length)
 
+const trendDaysCount = computed(() => {
+  // sleep/mood/stress should be same dates; use sleepSeries as reference
+  return sleepSeries.value?.length || 0
+})
+
+const trendStatus = computed(() => {
+  if (trendLoading.value) return 'Loading'
+  if (trendDaysCount.value === 0) return 'No data'
+  if (trendDaysCount.value < 3) return 'Early'
+  return 'Ready'
+})
+
 function todayISO() {
   return new Date().toISOString().slice(0, 10)
 }
@@ -193,6 +277,31 @@ function todayISO() {
 function sevenDaysAgoISO() {
   return new Date(Date.now() - 6 * 86400000).toISOString().slice(0, 10)
 }
+
+async function toggleHabit(h: any) {
+  const id = String(h?.id || '')
+  if (!id) return
+
+  habitError.value = ''
+  if (toggling.value[id]) return
+  toggling.value = { ...toggling.value, [id]: true }
+
+  const prev = Boolean(h.completed_today)
+  h.completed_today = !prev
+
+  try {
+    await $fetch('/api/habits/toggle', {
+      method: 'POST',
+      body: { habit_id: id, date: todayISO(), completed: h.completed_today }
+    })
+  } catch (e: any) {
+    h.completed_today = prev
+    habitError.value = e?.data?.statusMessage || e?.data?.message || e?.message || 'Could not update habit.'
+  } finally {
+    toggling.value = { ...toggling.value, [id]: false }
+  }
+}
+
 
 async function loadToday(uid: string) {
   loading.value = true
@@ -302,12 +411,12 @@ async function loadAll() {
 }
 
 onMounted(loadAll)
-
 watch(
-  () => user.value?.id,
-  (uid, prev) => {
-    if (uid && uid !== prev) loadAll()
-  }
+  () => user.value?.sub,
+  (uid) => {
+    if (uid) loadAll()
+  },
+  { immediate: true }
 )
-</script>
 
+</script>

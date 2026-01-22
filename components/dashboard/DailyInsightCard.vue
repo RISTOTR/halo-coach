@@ -1,27 +1,21 @@
 <template>
-  <div
-    class="h-full flex flex-col rounded-2xl border border-white/10 bg-slate-950/60
-         px-5 py-5 lg:px-6 lg:py-6
-         shadow-[0_18px_45px_rgba(0,0,0,0.45)]"
-  >
+  <div class="h-full flex flex-col rounded-2xl border border-white/10 bg-slate-950/60
+           px-5 py-5 lg:px-6 lg:py-6
+           shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
+    <!-- Header (fixed) -->
     <div class="flex items-start justify-between gap-3">
       <div>
-        <h2 class="text-base font-semibold text-slate-100">
-          Today’s insight
-        </h2>
-        <p class="mt-1 text-xs text-white/55">
-          A gentle reflection + one small next step.
-        </p>
+        <h2 class="text-base font-semibold text-slate-100">Today’s insight</h2>
+        <p class="mt-1 text-xs text-white/55">A gentle reflection + one small next step.</p>
       </div>
 
-      <div
-        class="shrink-0 rounded-full border border-white/10 bg-black/20 px-2.5 py-1 text-[10px] text-white/60"
-      >
+      <div class="shrink-0 rounded-full border border-white/10 bg-black/20 px-2.5 py-1 text-[10px] text-white/60">
         {{ statusLabel }}
       </div>
     </div>
 
-    <div class="mt-4 space-y-3 overflow-auto">
+    <!-- Body: scrollable area (but action + stats stay visible by structure) -->
+    <div class="mt-4 flex-1 space-y-3">
       <!-- Loading -->
       <div v-if="loading" class="space-y-2">
         <div class="h-3 w-5/6 rounded bg-white/10" />
@@ -32,28 +26,20 @@
 
       <!-- Error -->
       <div v-else-if="error" class="rounded-xl border border-red-500/20 bg-red-500/10 p-3">
-        <div class="text-xs font-medium text-red-200">
-          Couldn’t load your reflection
-        </div>
-        <div class="mt-1 text-xs text-red-200/80">
-          {{ error }}
-        </div>
+        <div class="text-xs font-medium text-red-200">Couldn’t load your reflection</div>
+        <div class="mt-1 text-xs text-red-200/80">{{ error }}</div>
       </div>
 
       <!-- Empty (no AI yet / no check-in) -->
       <div v-else-if="!hasAI && !hasMetrics" class="rounded-xl border border-white/10 bg-black/10 p-3">
-        <div class="text-sm text-slate-200">
-          No check-in yet today.
-        </div>
+        <div class="text-sm text-slate-200">No check-in yet today.</div>
         <p class="mt-1 text-xs text-white/55">
           Complete your daily check-in and you’ll get a reflection here.
         </p>
 
         <div class="mt-3">
-          <NuxtLink
-            to="/check-in"
-            class="inline-flex items-center justify-center rounded-xl border border-white/10 bg-emerald-500/15 px-3 py-2 text-xs font-medium text-emerald-200 hover:bg-emerald-500/20"
-          >
+          <NuxtLink to="/check-in"
+            class="inline-flex items-center justify-center rounded-xl border border-white/10 bg-emerald-500/15 px-3 py-2 text-xs font-medium text-emerald-200 hover:bg-emerald-500/20">
             Complete check-in →
           </NuxtLink>
         </div>
@@ -62,36 +48,46 @@
       <!-- Metrics present but no AI summary yet -->
       <div v-else-if="!hasAI && hasMetrics" class="space-y-3">
         <div class="rounded-xl border border-white/10 bg-black/10 p-3">
-          <div class="text-sm text-slate-200">
-            Reflection not generated yet.
-          </div>
+          <div class="text-sm text-slate-200">Reflection not generated yet.</div>
           <p class="mt-1 text-xs text-white/55">
             Here’s a quick nudge based on today’s snapshot:
           </p>
 
-          <p class="mt-3 text-sm leading-relaxed text-slate-200">
-            {{ fallbackNudge }}
-          </p>
+          <p class="mt-3 text-sm leading-relaxed text-slate-200">{{ fallbackNudge }}</p>
 
           <div class="mt-3">
-            <NuxtLink
-              to="/check-in"
-              class="inline-flex items-center justify-center rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-white/80 hover:bg-white/10"
-            >
+            <NuxtLink to="/check-in"
+              class="inline-flex items-center justify-center rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-white/80 hover:bg-white/10">
               Open check-in →
             </NuxtLink>
           </div>
         </div>
 
+        <!-- Always visible action -->
         <div class="rounded-xl border border-white/10 bg-slate-900/40 p-3">
-  <div class="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">
-    Next tiny action
-  </div>
-  <p class="mt-2 text-sm text-slate-200">
-    {{ nextTinyAction }}
-  </p>
-</div>
+          <div class="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">
+            Next tiny action
+          </div>
+          <p class="mt-2 text-sm text-slate-200">{{ nextTinyAction }}</p>
+        </div>
 
+        <!-- Stats -->
+        <div v-if="hasMetrics" class="grid grid-cols-3 gap-2">
+          <div class="rounded-xl border border-white/10 bg-black/10 p-2.5">
+            <div class="text-[10px] text-white/50">Mood</div>
+            <div class="mt-1 text-sm font-semibold text-white/90">{{ metrics!.mood }}</div>
+          </div>
+          <div class="rounded-xl border border-white/10 bg-black/10 p-2.5">
+            <div class="text-[10px] text-white/50">Energy</div>
+            <div class="mt-1 text-sm font-semibold text-white/90">{{ metrics!.energy }}</div>
+          </div>
+          <div class="rounded-xl border border-white/10 bg-black/10 p-2.5">
+            <div class="text-[10px] text-white/50">Stress</div>
+            <div class="mt-1 text-sm font-semibold text-white/90">{{ metrics!.stress }}</div>
+          </div>
+        </div>
+
+        <div class="text-[11px] text-white/45">{{ footerText }}</div>
       </div>
 
       <!-- AI summary (PREVIEW) -->
@@ -102,97 +98,101 @@
               Reflection
             </div>
 
-            <button
-              v-if="shouldShowReadMore"
-              type="button"
+            <button v-if="shouldShowReadMore" type="button"
               class="text-[11px] font-medium text-emerald-200/90 hover:text-emerald-200 hover:underline"
-              @click="openModal"
-            >
+              @click="openModal">
               Read full →
             </button>
           </div>
 
-          <div class="mt-2 space-y-2 text-sm leading-relaxed text-slate-200">
-            <p v-for="(p, idx) in previewParagraphs" :key="idx">
-              {{ p }}
-            </p>
-
-            <!-- subtle fade + hint -->
-            <div v-if="shouldShowReadMore" class="pt-1">
-              <div class="h-px w-full bg-white/10" />
-              <div class="mt-2 flex items-center justify-between">
-                <span class="text-[11px] text-white/45">
-                  Long reflection
-                </span>
-                <button
-                  type="button"
-                  class="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-white/80 hover:bg-white/10"
-                  @click="openModal"
-                >
-                  Read more
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="rounded-xl border border-white/10 bg-slate-900/40 p-3">
-  <div class="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">
-    Next tiny action
+          <!-- Preview with fade -->
+          <div class="relative mt-2">
+  <div
+    class="space-y-2 text-sm leading-relaxed text-slate-200"
+    :class="isCollapsed ? 'max-h-40 overflow-hidden' : 'max-h-64 overflow-auto pr-1'"
+  >
+    <p v-for="(p, idx) in previewParagraphs" :key="idx">
+      {{ p }}
+    </p>
   </div>
-  <p class="mt-2 text-sm text-slate-200">
-    {{ nextTinyAction }}
-  </p>
+
+  <div
+    v-if="isCollapsed && (paragraphs.length > previewParagraphs.length)"
+    class="pointer-events-none absolute bottom-0 left-0 h-10 w-full bg-gradient-to-t from-slate-950/95 to-transparent"
+  />
 </div>
 
 
-        <div v-if="hasMetrics" class="grid grid-cols-3 gap-2">
-          <MiniStat label="Mood" :value="metrics!.mood" />
-          <MiniStat label="Energy" :value="metrics!.energy" />
-          <MiniStat label="Stress" :value="metrics!.stress" />
+
+          <div v-if="shouldShowReadMore" class="mt-3 flex items-center justify-between">
+            <span class="text-[11px] text-white/45">Long reflection</span>
+            <button type="button"
+              class="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-white/80 hover:bg-white/10"
+              @click="openModal">
+              Read more
+            </button>
+          </div>
         </div>
 
-        <div class="text-[11px] text-white/45">
-          {{ footerText }}
+        <div class="mt-3 flex items-center justify-between rounded-xl border border-white/10 bg-black/10 p-3">
+  <div>
+    <div class="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">Quick reset</div>
+    <div class="mt-1 text-xs text-white/55">60s slow exhale breathing.</div>
+  </div>
+  <button class="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/80 hover:bg-white/10">
+    Start
+  </button>
+</div>
+
+
+        <!-- Always visible action -->
+        <div class="rounded-xl border border-white/10 bg-slate-900/40 p-3">
+          <div class="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">
+            Next tiny action
+          </div>
+          <p class="mt-2 text-sm text-slate-200">{{ nextTinyAction }}</p>
         </div>
+
+        <!-- Stats -->
+        <div v-if="hasMetrics" class="grid grid-cols-3 gap-2">
+          <div class="rounded-xl border border-white/10 bg-black/10 p-2.5">
+            <div class="text-[10px] text-white/50">Mood</div>
+            <div class="mt-1 text-sm font-semibold text-white/90">{{ metrics!.mood }}</div>
+          </div>
+          <div class="rounded-xl border border-white/10 bg-black/10 p-2.5">
+            <div class="text-[10px] text-white/50">Energy</div>
+            <div class="mt-1 text-sm font-semibold text-white/90">{{ metrics!.energy }}</div>
+          </div>
+          <div class="rounded-xl border border-white/10 bg-black/10 p-2.5">
+            <div class="text-[10px] text-white/50">Stress</div>
+            <div class="mt-1 text-sm font-semibold text-white/90">{{ metrics!.stress }}</div>
+          </div>
+        </div>
+
+        <div class="text-[11px] text-white/45">{{ footerText }}</div>
       </div>
     </div>
 
     <!-- MODAL -->
     <Teleport to="body">
-      <div
-        v-if="isOpen"
-        class="fixed inset-0 z-50 flex items-center justify-center px-4 py-6"
-        @keydown.esc.prevent="closeModal"
-      >
-        <!-- Backdrop -->
-        <div
-          class="absolute inset-0 bg-black/70 backdrop-blur-sm"
-          @click="closeModal"
-        />
+      <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center px-4 py-6"
+        @keydown.esc.prevent="closeModal">
+        <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" @click="closeModal" />
 
-        <!-- Dialog -->
         <div
           class="relative w-full max-w-2xl rounded-2xl border border-white/10 bg-slate-950/90 shadow-[0_30px_80px_rgba(0,0,0,0.65)]"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Full reflection"
-        >
+          role="dialog" aria-modal="true" aria-label="Full reflection">
           <div class="flex items-start justify-between gap-4 border-b border-white/10 px-5 py-4">
             <div>
               <div class="text-xs font-semibold uppercase tracking-[0.2em] text-white/55">
                 Today’s reflection
               </div>
-              <div class="mt-1 text-base font-semibold text-slate-100">
-                Full insight
-              </div>
+              <div class="mt-1 text-base font-semibold text-slate-100">Full insight</div>
             </div>
 
-            <button
-              type="button"
+            <button type="button"
               class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-white/80 hover:bg-white/10"
-              @click="closeModal"
-            >
+              @click="closeModal">
               Close
             </button>
           </div>
@@ -204,37 +204,29 @@
               </p>
             </div>
 
-            <div class="mt-5">
-              <div class="rounded-xl border border-white/10 bg-slate-900/40 p-3">
-  <div class="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">
-    Next tiny action
-  </div>
-  <p class="mt-2 text-sm text-slate-200">
-    {{ nextTinyAction }}
-  </p>
-</div>
-
+            <div class="mt-5 rounded-xl border border-white/10 bg-slate-900/40 p-3">
+              <div class="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">
+                Next tiny action
+              </div>
+              <p class="mt-2 text-sm text-slate-200">{{ nextTinyAction }}</p>
             </div>
 
-            <div v-if="hasMetrics" class="grid grid-cols-3 gap-2">
-  <div class="rounded-xl border border-white/10 bg-black/10 p-2.5">
-    <div class="text-[10px] text-white/50">Mood</div>
-    <div class="mt-1 text-sm font-semibold text-white/90">{{ metrics!.mood }}</div>
-  </div>
-  <div class="rounded-xl border border-white/10 bg-black/10 p-2.5">
-    <div class="text-[10px] text-white/50">Energy</div>
-    <div class="mt-1 text-sm font-semibold text-white/90">{{ metrics!.energy }}</div>
-  </div>
-  <div class="rounded-xl border border-white/10 bg-black/10 p-2.5">
-    <div class="text-[10px] text-white/50">Stress</div>
-    <div class="mt-1 text-sm font-semibold text-white/90">{{ metrics!.stress }}</div>
-  </div>
-</div>
-
-
-            <div class="mt-4 text-[11px] text-white/45">
-              {{ footerText }}
+            <div v-if="hasMetrics" class="mt-4 grid grid-cols-3 gap-2">
+              <div class="rounded-xl border border-white/10 bg-black/10 p-2.5">
+                <div class="text-[10px] text-white/50">Mood</div>
+                <div class="mt-1 text-sm font-semibold text-white/90">{{ metrics!.mood }}</div>
+              </div>
+              <div class="rounded-xl border border-white/10 bg-black/10 p-2.5">
+                <div class="text-[10px] text-white/50">Energy</div>
+                <div class="mt-1 text-sm font-semibold text-white/90">{{ metrics!.energy }}</div>
+              </div>
+              <div class="rounded-xl border border-white/10 bg-black/10 p-2.5">
+                <div class="text-[10px] text-white/50">Stress</div>
+                <div class="mt-1 text-sm font-semibold text-white/90">{{ metrics!.stress }}</div>
+              </div>
             </div>
+
+            <div class="mt-4 text-[11px] text-white/45">{{ footerText }}</div>
           </div>
         </div>
       </div>
@@ -254,15 +246,17 @@ type Metrics = {
 }
 
 const props = defineProps<{
+  collapsed?: boolean
+  maxParagraphs?: number
   loading?: boolean
   error?: string
   aiSummary?: string
   metrics?: Metrics | null
   dateLabel?: string
-  maxParagraphs?: number // preview paragraphs
 }>()
 
 const maxParagraphs = computed(() => props.maxParagraphs ?? 2)
+const isCollapsed = computed(() => props.collapsed ?? false)
 
 const hasAI = computed(() => Boolean((props.aiSummary || '').trim()))
 const hasMetrics = computed(() => Boolean(props.metrics))
@@ -284,8 +278,14 @@ const paragraphs = computed(() => {
     .filter(Boolean)
 })
 
-const previewParagraphs = computed(() => paragraphs.value.slice(0, maxParagraphs.value))
-const shouldShowReadMore = computed(() => paragraphs.value.length > maxParagraphs.value)
+const previewParagraphs = computed(() => {
+  const limit = isCollapsed.value ? (props.maxParagraphs ?? 2) : (props.maxParagraphs ?? 999)
+  return paragraphs.value.slice(0, limit)
+})
+
+const shouldShowReadMore = computed(() => {
+  return isCollapsed.value && paragraphs.value.length > (props.maxParagraphs ?? 2)
+})
 
 function clamp(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, n))
@@ -343,34 +343,17 @@ const isOpen = ref(false)
 
 function openModal() {
   isOpen.value = true
-  // give focus to the dialog container for esc key reliability
-  nextTick(() => {
-    // nothing required; esc is handled via key modifier, but keeping hook for future focus trap
-  })
+  nextTick(() => { })
 }
 
 function closeModal() {
   isOpen.value = false
 }
 
-// close modal automatically if AI disappears (e.g. reload)
 watch(
   () => props.aiSummary,
   (val) => {
     if (!val?.trim()) isOpen.value = false
   }
 )
-
-const MiniStat = defineComponent({
-  props: {
-    label: { type: String, required: true },
-    value: { type: Number, required: true }
-  },
-  template: `
-    <div class="rounded-xl border border-white/10 bg-black/10 p-2.5">
-      <div class="text-[10px] text-white/50">{{ label }}</div>
-      <div class="mt-1 text-sm font-semibold text-white/90">{{ value }}</div>
-    </div>
-  `
-})
 </script>
