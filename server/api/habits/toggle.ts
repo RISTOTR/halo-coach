@@ -17,13 +17,12 @@ export default defineEventHandler(async (event) => {
   const supabase = await serverSupabaseClient(event)
   const { habit_id, date, completed } = bodySchema.parse(await readBody(event))
 
-  // Ensure habit belongs to user
-  const { data: habit, error: habitErr } = await supabase
-    .from('habits')
-    .select('id,user_id')
-    .eq('id', habit_id)
-    .select('id,user_id,archived')
-    .maybeSingle()
+const { data: habit, error: habitErr } = await supabase
+  .from('habits')
+  .select('id,user_id,archived')
+  .eq('id', habit_id)
+  .maybeSingle()
+
 
   if (habit.archived) throw createError({ statusCode: 400, statusMessage: 'Habit is archived' })
   if (habitErr) throw createError({ statusCode: 500, statusMessage: habitErr.message })
