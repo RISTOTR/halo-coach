@@ -3,15 +3,22 @@
     <div class="text-[11px] uppercase tracking-[0.16em] text-white/50">{{ label }}</div>
     <div class="mt-2 text-2xl font-semibold text-white">{{ value }}</div>
 
-    <div
-      v-if="showDelta"
-      class="mt-2 inline-flex items-center rounded-full border px-2.5 py-1 text-[11px]"
-      :class="deltaNeutral
-        ? 'border-white/10 bg-black/10 text-white/55'
-        : 'border-emerald-400/15 bg-emerald-500/10 text-emerald-200'"
-    >
-      {{ delta }}
-    </div>
+    <div v-if="showDelta" class="mt-2">
+  <div
+    v-if="hasDelta"
+    class="inline-flex items-center rounded-full border px-2.5 py-1 text-[11px]"
+    :class="deltaNeutral
+      ? 'border-white/10 bg-black/10 text-white/55'
+      : 'border-emerald-400/15 bg-emerald-500/10 text-emerald-200'"
+  >
+    {{ delta }}
+  </div>
+
+  <div v-else class="text-[11px] text-white/45">
+    Not enough history to compare.
+  </div>
+</div>
+
 
     <div v-else class="mt-2 text-[11px] text-white/45">
       Weekly pattern
@@ -20,11 +27,17 @@
 </template>
 
 <script setup lang="ts">
-defineProps<{
+const props = defineProps<{
   label: string
   value: string
   delta: string
   showDelta?: boolean
   deltaNeutral?: boolean
 }>()
+
+const hasDelta = computed(() => {
+  const d = (props.delta || '').trim()
+  // treat these as "no delta"
+  return d !== '' && d !== '—' && d !== '-' && !d.toLowerCase().includes('need 14')
+})
 </script>

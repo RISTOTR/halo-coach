@@ -6,41 +6,116 @@
       <div class="min-w-0">
         <div class="flex flex-wrap items-center gap-2">
           <h2 class="text-lg font-semibold text-slate-100">
-            Weekly AI reflection
+            Weekly reflection
           </h2>
 
-          <!-- Badge -->
-          <span v-if="badgeLabel"
-            class="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-medium text-slate-200">
-            {{ badgeLabel }}
+          <!-- Confidence badge -->
+          <span
+            v-if="report?.confidence"
+            class="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-medium text-slate-200"
+            :class="confidencePillClass"
+          >
+            {{ confidenceLabel }}
+          </span>
+
+          <!-- Optional vibe badge -->
+          <span
+            v-if="vibeBadge"
+            class="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-medium text-slate-200"
+          >
+            {{ vibeBadge }}
           </span>
         </div>
 
         <!-- Updated line -->
         <p v-if="generatedLabel" class="mt-1 text-[11px] text-slate-400">
-          Week of {{ reportDateLabel }} · generated {{ generatedLabel }} · based on your check-ins, habits, and goals
+          Week of {{ reportDateLabel }} · generated {{ generatedLabel }} · based on your check-ins and habits
         </p>
+        <p v-if="metaLine" class="mt-1 text-[11px] text-white/45">
+  {{ metaLine }}
+</p>
+
 
         <p v-else class="mt-1 text-[11px] text-slate-400">
-          A gentle look at your last 7 days and 2–3 ideas for the week ahead.
+          A calm look at your last 7 days — wins, drift, and one next focus.
         </p>
       </div>
 
       <button
         class="shrink-0 rounded-full border border-emerald-500/60 bg-emerald-500/10 px-3 py-1 text-[10px] font-medium text-emerald-100 hover:bg-emerald-500/20 disabled:opacity-50"
-        @click="refresh" :disabled="loading">
+        @click="refresh"
+        :disabled="loading"
+      >
         <span v-if="loading">Updating…</span>
-        <span v-else>Update reflection</span>
+        <span v-else>Update</span>
       </button>
     </div>
-
 
     <div v-if="loading" class="text-[11px] text-slate-300">
       Loading weekly reflection…
     </div>
 
-    <div v-else-if="summary" class="max-w-none text-sm leading-relaxed halo-weekly-summary">
-      <div v-html="renderedSummary" />
+    <!-- New structured UI -->
+    <div v-else-if="report" class="space-y-4">
+      <!-- Wins -->
+      <section class="rounded-xl border border-white/10 bg-black/10 p-4">
+        <div class="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/55">
+          Wins
+        </div>
+
+        <ul class="mt-2 space-y-1.5 text-sm text-slate-100">
+          <li v-for="(w, i) in report.wins" :key="`w-${i}`" class="flex gap-2">
+            <span class="mt-[2px] text-emerald-300">•</span>
+            <span class="text-white/85">{{ w }}</span>
+          </li>
+        </ul>
+      </section>
+
+      <!-- Drift -->
+      <section class="rounded-xl border border-white/10 bg-black/10 p-4">
+        <div class="flex items-center justify-between gap-3">
+          <div class="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/55">
+            Drift
+          </div>
+          <div v-if="report.drift?.length === 0" class="text-[11px] text-white/35">
+            None flagged
+          </div>
+        </div>
+
+        <ul v-if="report.drift?.length" class="mt-2 space-y-1.5 text-sm text-slate-100">
+          <li v-for="(d, i) in report.drift" :key="`d-${i}`" class="flex gap-2">
+            <span class="mt-[2px] text-sky-300">•</span>
+            <span class="text-white/80">{{ d }}</span>
+          </li>
+        </ul>
+
+        <p v-else class="mt-2 text-sm text-white/45">
+          Your week looked relatively steady.
+        </p>
+      </section>
+
+      <!-- Next focus -->
+      <section class="rounded-xl border border-emerald-500/15 bg-emerald-500/10 p-4">
+        <div class="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-100/80">
+          Next focus
+        </div>
+
+        <div class="mt-2 flex items-start gap-2 text-sm">
+          <span class="mt-[2px] text-emerald-300">→</span>
+          <p class="text-emerald-50/90">
+            {{ report.next_focus }}
+          </p>
+        </div>
+
+        <div class="mt-3 text-[11px] text-emerald-100/60">
+          Confidence: <span class="font-medium text-emerald-100/80">{{ confidenceLabel }}</span>
+        </div>
+      </section>
+
+      <!-- Fallback note if parsing failed but we still have rawContent -->
+      <div v-if="parseError" class="rounded-xl border border-yellow-500/20 bg-yellow-500/10 p-3 text-[11px] text-yellow-100/80">
+        This weekly report is stored in an older format. Updating will regenerate it in the new structured style.
+      </div>
     </div>
 
     <div v-else class="text-[11px] text-slate-500">
@@ -50,26 +125,36 @@
 </template>
 
 <script setup lang="ts">
-import { marked } from 'marked'
+import { parseReport } from '~/server/utils/aiReportContent'
+
+type WeeklyOut = {
+  wins: string[]
+  drift: string[]
+  next_focus: string
+  confidence: 'low' | 'moderate' | 'strong'
+}
 
 const supabase = useSupabaseClient()
 
-const summary = ref<string>('')
 const loading = ref(false)
 
-const renderedSummary = computed(() =>
-  summary.value ? marked.parse(summary.value) : ''
-)
+const rawContent = ref<string>('')
+const report = ref<WeeklyOut | null>(null)
+const parseError = ref(false)
 
 const createdAt = ref<string | null>(null)
+const reportDate = ref<string | null>(null)
+
+const coverage = ref<number | null>(null) // 0..7
+const deltaLabel = ref<string>('')        // "vs previous week" etc
+const deltaMode = ref<string>('')         // "week_over_week" / "within_window"
+
 
 const generatedLabel = computed(() => {
   if (!createdAt.value) return ''
   const d = new Date(createdAt.value)
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 })
-
-const reportDate = ref<string | null>(null)
 
 const reportDateLabel = computed(() => {
   if (!reportDate.value) return ''
@@ -78,32 +163,76 @@ const reportDateLabel = computed(() => {
 })
 
 
-const badgeLabel = computed(() => {
-  const text = (summary.value || '').toLowerCase()
+const confidenceLabel = computed(() => {
+  const c = report.value?.confidence
+  if (!c) return ''
+  if (c === 'low') return 'Confidence: Low'
+  if (c === 'strong') return 'Confidence: Strong'
+  return 'Confidence: Moderate'
+})
 
-  // Recovery signals
+const confidencePillClass = computed(() => {
+  // keep subtle; don’t scream
+  const c = report.value?.confidence
+  if (c === 'strong') return 'border-emerald-400/20 bg-emerald-500/10 text-emerald-100'
+  if (c === 'low') return 'border-white/10 bg-white/5 text-white/70'
+  return 'border-sky-400/15 bg-sky-500/10 text-sky-100'
+})
+
+const vibeBadge = computed(() => {
+  // very light heuristic (optional)
+  const drift = (report.value?.drift || []).join(' ').toLowerCase()
+  const focus = (report.value?.next_focus || '').toLowerCase()
+  const combined = `${drift} ${focus}`
+
   const recoverySignals = [
     'rest', 'recovery', 'gentle', 'lower the pressure', 'reduce the pressure',
     'take it easy', 'slow down', 'burnout', 'tired', 'fatigue', 'overwhelmed'
   ]
 
-  const hasRecoveryTheme = recoverySignals.some(s => text.includes(s))
-
-  if (text.includes('gentle')) return 'Gentle week'
-  if (hasRecoveryTheme) return 'Recovery week'
-
+  if (recoverySignals.some(s => combined.includes(s))) return 'Recovery week'
   return ''
 })
 
+const metaLine = computed(() => {
+  const parts: string[] = []
+
+  if (typeof coverage.value === 'number') parts.push(`Based on ${coverage.value}/7 check-ins`)
+  if (deltaLabel.value) parts.push(deltaLabel.value)
+
+  // Keep this optional; you already show confidence in UI
+  const c = report.value?.confidence
+  if (c) parts.push(`confidence: ${c}`)
+
+  return parts.join(' · ')
+})
+
+async function loadOverviewMeta() {
+  try {
+    const data = await $fetch('/api/reports/overview', { query: { days: 7 } }) as any
+    coverage.value = typeof data?.checkins === 'number' ? data.checkins : null
+    deltaLabel.value = String(data?.delta_label || '')
+    deltaMode.value = String(data?.delta_mode || '')
+  } catch (e) {
+    // optional info; fail quietly
+    coverage.value = null
+    deltaLabel.value = ''
+    deltaMode.value = ''
+  }
+}
+
 async function loadExisting() {
   loading.value = true
+  parseError.value = false
+
   try {
     const today = new Date().toISOString().slice(0, 10)
 
     const { data: userData } = await supabase.auth.getUser()
     const currentUser = userData.user
     if (!currentUser) {
-      summary.value = ''
+      rawContent.value = ''
+      report.value = null
       return
     }
 
@@ -119,15 +248,22 @@ async function loadExisting() {
 
     if (error) console.error(error)
 
-    summary.value = data?.content || ''
+    rawContent.value = data?.content || ''
     createdAt.value = data?.created_at || null
     reportDate.value = data?.date || null
 
+    const parsed = parseReport<WeeklyOut>(rawContent.value)
+report.value = parsed
+parseError.value = !!rawContent.value && !parsed
+
+await loadOverviewMeta()
 
 
   } catch (e) {
     console.error(e)
-    summary.value = ''
+    rawContent.value = ''
+    report.value = null
+    parseError.value = false
   } finally {
     loading.value = false
   }
@@ -138,12 +274,23 @@ async function refresh() {
   try {
     const today = new Date().toISOString().slice(0, 10)
 
-    await $fetch('/api/ai/weekly-summary', {
-      method: 'POST',
-      body: { endDate: today }
-    })
+    const res = await $fetch('/api/ai/weekly-summary', {
+  method: 'POST',
+  body: { endDate: today }
+})
 
-    await loadExisting()
+if (res?.summary) {
+  report.value = res.summary
+  rawContent.value = JSON.stringify(res.summary)
+  parseError.value = false
+  createdAt.value = new Date().toISOString()
+  reportDate.value = today
+  await loadOverviewMeta()
+
+} else {
+  await loadExisting()
+}
+
   } catch (e) {
     console.error(e)
   } finally {
@@ -151,23 +298,7 @@ async function refresh() {
   }
 }
 
-
 onMounted(() => {
   loadExisting()
 })
 </script>
-
-<style scoped>
-.halo-weekly-summary :deep(strong) {
-  font-weight: 700;
-  color: #6ee7b7;
-  /* emerald-300-ish, para que se note bien */
-}
-
-.halo-weekly-summary :deep(em) {
-  font-style: italic;
-  color: rgba(226, 232, 240, 0.9);
-  /* slate-200-ish */
-  opacity: 0.95;
-}
-</style>

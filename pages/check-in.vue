@@ -155,6 +155,72 @@
 
       <!-- RIGHT (1/3): AI reflection + actions -->
       <div class="space-y-6">
+        <!-- Experiment card -->
+        <div class="rounded-2xl border border-white/10 bg-slate-950/60 px-5 py-4 shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <h2 class="text-sm font-semibold text-slate-100">Experiment</h2>
+              <p class="mt-1 text-[11px] text-slate-400">
+                One focused lever at a time. End it when you’re ready to review.
+              </p>
+            </div>
+
+            <span v-if="expActive"
+              class="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-medium text-emerald-100">
+              Active
+            </span>
+            <span v-else class="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] text-white/60">
+              None
+            </span>
+          </div>
+
+          <div v-if="expLoading" class="mt-3 text-[11px] text-slate-400">
+            Loading experiment…
+          </div>
+
+          <div v-else-if="expActive" class="mt-3 space-y-3">
+            <div class="rounded-xl border border-white/10 bg-slate-900/60 px-3 py-2">
+              <p class="text-xs font-medium text-slate-100 truncate">
+                {{ expFlow.ctx.activeExperiment.title }}
+              </p>
+              <p class="mt-0.5 text-[10px] text-slate-400">
+                Day {{ experimentDay }} · Target: {{ expFlow.ctx.activeExperiment.target_metric }}
+              </p>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <button
+                class="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-100 hover:bg-white/10"
+                @click="openExperimentDialog">
+                View / end
+              </button>
+
+              <button
+                class="rounded-full border border-emerald-500/60 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20"
+                @click="openExperimentDialog">
+                End & review
+              </button>
+            </div>
+          </div>
+
+          <div v-else class="mt-3 space-y-3">
+            <p class="text-[11px] text-slate-400">
+              No active experiment right now.
+            </p>
+            <button
+              class="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-100 hover:bg-white/10"
+              @click="openExperimentStart">
+              Start an experiment
+            </button>
+
+          </div>
+        </div>
+
+        <!-- Experiment dialog -->
+        <ExperimentDialog v-model="experimentDialogOpen" :flow="expFlow" />
+        <ExperimentStartDialog v-model="experimentStartOpen" :flow="expFlow" />
+
+
         <!-- Actions card -->
         <div class="rounded-2xl border border-white/10 bg-slate-950/60 px-5 py-4 shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
           <div class="flex items-center justify-between gap-3">
@@ -211,6 +277,21 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { marked } from 'marked'
+import ExperimentDialog from '~/components/ExperimentDialog.vue'
+import { useExperimentFlow } from '~/composables/useExperimentFlow'
+import ExperimentStartDialog from '~/components/ExperimentStartDialog.vue'
+
+type Preset = {
+  title: string
+  leverType: 'metric' | 'habit' | 'custom'
+  leverRef?: string
+  targetMetric: 'energy' | 'stress' | 'mood' | 'sleep_hours' | 'steps' | 'water_liters' | 'outdoor_minutes'
+  effortEstimate?: 'low' | 'moderate' | 'high'
+  expectedImpact?: 'low' | 'moderate' | 'high'
+  recommendedDays?: number
+  baselineDays?: number
+}
+
 
 const supabase = useSupabaseClient()
 const userRef = useSupabaseUser()
@@ -263,6 +344,81 @@ const loadingAi = ref(false)
 // UI state
 const saving = ref(false)
 const statusMessage = ref('')
+
+// Experiments
+const expFlow = useExperimentFlow()
+const experimentDialogOpen = ref(false)
+
+const expLoading = computed(() => expFlow.state.value === 'loading_active')
+const expActive = computed(() => expFlow.ctx.activeExperiment?.status === 'active')
+
+const experimentStartOpen = ref(false)
+
+function openExperimentStart() {
+  experimentStartOpen.value = true
+}
+
+
+const experimentDay = computed(() => {
+  const exp = expFlow.ctx.activeExperiment
+  if (!exp?.start_date) return 0
+  const start = new Date(`${exp.start_date}T00:00:00Z`)
+  const now = new Date(`${today}T00:00:00Z`)
+  const diffDays = Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
+  return Math.max(1, diffDays + 1)
+})
+
+function openExperimentDialog() {
+  experimentDialogOpen.value = true
+  // If you want the dialog to always begin at confirm_end step:
+  expFlow.openEndConfirm()
+}
+
+const replaceConfirmOpen = ref(false)
+const pendingPreset = ref<Preset | null>(null)
+const activeExpFrom409 = ref<any | null>(null)
+
+async function startExperiment(preset: Preset, replaceActive = false) {
+  try {
+    await $fetch('/api/ai/experiments/start', {
+      method: 'POST',
+      body: {
+        title: preset.title,
+        leverType: preset.leverType,
+        leverRef: preset.leverRef,
+        targetMetric: preset.targetMetric,
+        effortEstimate: preset.effortEstimate,
+        expectedImpact: preset.expectedImpact,
+        recommendedDays: preset.recommendedDays ?? 7,
+        baselineDays: preset.baselineDays ?? 30,
+        replaceActive
+      }
+    })
+
+    await expFlow.loadActive()
+  } catch (e: any) {
+    const status = e?.status || e?.data?.statusCode
+    if (status === 409) {
+      // Your API returns data.activeExperiment
+      activeExpFrom409.value = e?.data?.data?.activeExperiment || null
+      pendingPreset.value = preset
+      replaceConfirmOpen.value = true
+      return
+    }
+    console.error(e?.data?.statusMessage || e?.message || 'Failed to start experiment')
+  }
+}
+
+// call this when user confirms "Replace"
+async function confirmReplaceActive() {
+  if (!pendingPreset.value) return
+  replaceConfirmOpen.value = false
+  await startExperiment(pendingPreset.value, true)
+  pendingPreset.value = null
+  activeExpFrom409.value = null
+}
+
+
 
 watch(
   userRef,
@@ -397,20 +553,20 @@ const handleSubmit = async () => {
     // 2) upsert reflection (only if non-empty)
     const reflectionText = note.value.trim()
 
-if (reflectionText) {
-  await supabase.from('journal_entries').upsert(
-    { user_id: currentUser.id, date: today, type: 'evening', content: reflectionText },
-    { onConflict: 'user_id,date,type' }
-  )
-} else {
-  // user cleared reflection -> delete
-  await supabase
-    .from('journal_entries')
-    .delete()
-    .eq('user_id', currentUser.id)
-    .eq('date', today)
-    .eq('type', 'evening')
-}
+    if (reflectionText) {
+      await supabase.from('journal_entries').upsert(
+        { user_id: currentUser.id, date: today, type: 'evening', content: reflectionText },
+        { onConflict: 'user_id,date,type' }
+      )
+    } else {
+      // user cleared reflection -> delete
+      await supabase
+        .from('journal_entries')
+        .delete()
+        .eq('user_id', currentUser.id)
+        .eq('date', today)
+        .eq('type', 'evening')
+    }
 
 
     // 3) habits logs
@@ -432,6 +588,8 @@ if (reflectionText) {
     })
     aiContent.value = normalizeAiResponse(aiRes)
     statusMessage.value = 'Reflection updated.'
+    await expFlow.loadActive()
+
   } catch (e) {
     console.error(e)
     statusMessage.value = 'Something went wrong.'
@@ -443,5 +601,7 @@ if (reflectionText) {
 
 onMounted(async () => {
   await Promise.all([loadHabitsForToday(), loadTodayCheckin()])
+  await expFlow.loadActive()
 })
+
 </script>

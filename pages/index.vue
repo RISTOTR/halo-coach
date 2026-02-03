@@ -199,7 +199,10 @@
     </section>
 
 
-
+    <NextFocusCard
+      @openCheckIn="navigateTo('/check-in')"
+     @start-preset="startExperiment"
+    />
     <WeeklyGoalsCard />
     <WeeklyAiReportCard />
   </div>
@@ -212,6 +215,8 @@ import DailySnapshotCard from '~/components/dashboard/DailySnapshotCard.vue'
 import DailyInsightCard from '~/components/dashboard/DailyInsightCard.vue'
 import WeeklyAiReportCard from '~/components/dashboard/WeeklyAiReportCard.vue'
 import WeeklyGoalsCard from '~/components/dashboard/WeeklyGoalsCard.vue'
+import NextFocusCard from '~/components/dashboard/NextFocusCard.vue'
+
 
 type MetricPoint = { time: number; value: number }
 
@@ -383,8 +388,42 @@ async function loadAI(uid: string) {
   aiLoading.value = false
 }
 
+const expFlow = useExperimentFlow()
+
+const replaceConfirmOpen = ref(false)
+const pendingPreset = ref<Preset | null>(null)
+const activeExpFrom409 = ref<any | null>(null)
+
+async function startExperiment(preset: Preset, replaceActive = false) {
+  try {
+    await expFlow.startFromPreset(preset, replaceActive)
+  } catch (e: any) {
+    const status = e?.status || e?.data?.statusCode
+    if (status === 409) {
+      activeExpFrom409.value =
+        e?.data?.data?.activeExperiment ||
+        e?.data?.activeExperiment ||
+        null
+
+      pendingPreset.value = preset
+      replaceConfirmOpen.value = true
+      return
+    }
+    console.error(e?.data?.statusMessage || e?.message || 'Failed to start experiment')
+  }
+}
+
+async function confirmReplace() {
+  if (!pendingPreset.value) return
+  replaceConfirmOpen.value = false
+  await startExperiment(pendingPreset.value, true)
+  pendingPreset.value = null
+}
+
+
 async function loadAll() {
-  const uid = user.value?.sub
+  const uid = (user.value as any)?.id || (user.value as any)?.sub
+
   if (!uid) {
     // Reset state for logged-out / not-ready sessions
     metrics.value = null
@@ -406,7 +445,8 @@ async function loadAll() {
     loadToday(uid),
     loadHabits(uid),
     loadTrends(uid),
-    loadAI(uid)
+    loadAI(uid),
+    expFlow.loadActive()
   ])
 }
 

@@ -222,4 +222,5 @@ const habitsPercent = computed(() => {
   if (!props.habitsTotal) return 0
   return Math.round((props.habitsCompleted / props.habitsTotal) * 100)
 })
+
 </script>

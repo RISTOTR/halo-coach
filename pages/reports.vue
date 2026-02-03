@@ -18,7 +18,7 @@
           </p>
         </div>
 
-        
+
         <div class="flex items-center gap-2">
           <button type="button" class="rounded-full border px-3 py-1.5 text-xs" :class="advanced
             ? 'border-emerald-400/20 bg-emerald-500/10 text-emerald-200'
@@ -46,7 +46,7 @@
       <!-- Summary -->
       <section class="grid gap-4 md:grid-cols-4">
         <SummaryTile label="Avg sleep" :value="fmtSleep(report.summary.sleep_avg)"
-          :delta="fmtDelta(report.deltas.sleep, 'sleep')" :show-delta="advanced" />
+          :delta="fmtDelta(report.deltas.sleep, 'sleep', report.delta_label)" :show-delta="advanced" />
         <SummaryTile label="Avg mood" :value="fmtNum(report.summary.mood_avg)"
           :delta="fmtDelta(report.deltas.mood, 'mood')" :show-delta="advanced" />
         <SummaryTile label="Avg stress" :value="fmtNum(report.summary.stress_avg)"
@@ -54,6 +54,10 @@
         <SummaryTile label="Habits" :value="fmtPct(report.summary.habit_completion_rate)"
           :delta="`${report.habits.active_count} active`" :show-delta="advanced" deltaNeutral />
       </section>
+
+      <p class="mt-1 text-sm text-white/70 max-w-xl">
+        {{ keyTakeaway }}
+      </p>
 
 
       <!-- Trends -->
@@ -63,9 +67,13 @@
           <div>
             <h2 class="text-lg font-semibold text-slate-100">Trends</h2>
             <p class="mt-1 text-xs text-white/55">
-  <span v-if="!advanced">A calm view of how your week is moving.</span>
-  <span v-else>{{ report.period.start }} → {{ report.period.end }} · {{ report.checkins }} check-ins</span>
-</p>
+              <span v-if="!advanced">A calm view of how your week is moving.</span>
+              <span v-else>
+                {{ report.period.start }} → {{ report.period.end }} · {{ report.checkins }} check-ins · {{
+                  report.delta_label }}
+              </span>
+
+            </p>
 
           </div>
           <div class="shrink-0 rounded-full border border-white/10 bg-black/20 px-2.5 py-1 text-[10px] text-white/60">
@@ -76,55 +84,56 @@
         <div class="mt-4 grid gap-6 md:grid-cols-2">
           <TrendCard title="Sleep" hint="Higher is better (aim ~7–8h)">
             <template v-if="compact(report.series.sleep).length > 1">
-  <MiniSparkline :points="compact(report.series.sleep)" class="h-16 w-full" />
-</template>
-<div v-else class="text-[11px] text-white/45">
-  Not enough data yet.
-</div>
+              <MiniSparkline :points="compact(report.series.sleep)" class="h-16 w-full" />
+            </template>
+            <div v-else class="text-[11px] text-white/45">
+              {{ compact(report.series.sleep).length === 1 ? '1 check-in — add one more for a trend.' : 'Not enough data yet.' }}
+            </div>
+
 
           </TrendCard>
 
           <TrendCard title="Mood" hint="Your 1–10 scale">
             <template v-if="compact(report.series.mood).length > 1">
-  <MiniSparkline :points="compact(report.series.mood)" class="h-16 w-full" />
-</template>
-<div v-else class="text-[11px] text-white/45">
-  Not enough data yet.
-</div>
+              <MiniSparkline :points="compact(report.series.mood)" class="h-16 w-full" />
+            </template>
+            <div v-else class="text-[11px] text-white/45">
+              Not enough data yet.
+            </div>
 
           </TrendCard>
 
           <TrendCard title="Stress" hint="Lower is better">
             <template v-if="compact(report.series.stress).length > 1">
-  <MiniSparkline :points="compact(report.series.stress)" class="h-16 w-full" />
-</template>
-<div v-else class="text-[11px] text-white/45">
-  Not enough data yet.
-</div>
+              <MiniSparkline :points="compact(report.series.stress)" class="h-16 w-full" />
+            </template>
+            <div v-else class="text-[11px] text-white/45">
+              Not enough data yet.
+            </div>
 
           </TrendCard>
 
           <TrendCard title="Energy" hint="Your 1–10 scale">
             <template v-if="compact(report.series.energy).length > 1">
-  <MiniSparkline :points="compact(report.series.energy)" class="h-16 w-full" />
-</template>
-<div v-else class="text-[11px] text-white/45">
-  Not enough data yet.
-</div>
+              <MiniSparkline :points="compact(report.series.energy)" class="h-16 w-full" />
+            </template>
+            <div v-else class="text-[11px] text-white/45">
+              Not enough data yet.
+            </div>
 
           </TrendCard>
         </div>
         <div v-if="advanced" class="mt-4 rounded-xl border border-white/10 bg-black/10 p-4">
-  <div class="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">
-    Details
-  </div>
-  <div class="mt-2 grid gap-2 sm:grid-cols-2 text-[11px] text-white/70">
-    <div>Check-ins: <span class="text-white/90 font-medium">{{ report.checkins }}</span></div>
-    <div>Window: <span class="text-white/90 font-medium">{{ report.period.days }} days</span></div>
-    <div>Start: <span class="text-white/90 font-medium">{{ report.period.start }}</span></div>
-    <div>End: <span class="text-white/90 font-medium">{{ report.period.end }}</span></div>
-  </div>
-</div>
+          <div class="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">
+            Details
+          </div>
+          <div class="mt-2 grid gap-2 sm:grid-cols-2 text-[11px] text-white/70">
+            <div>Check-ins: <span class="text-white/90 font-medium">{{ report.checkins }}</span></div>
+            <div>Window: <span class="text-white/90 font-medium">{{ report.period.days }} days</span></div>
+            <div>Start: <span class="text-white/90 font-medium">{{ report.period.start }}</span></div>
+            <div>End: <span class="text-white/90 font-medium">{{ report.period.end }}</span></div>
+          </div>
+        </div>
 
       </section>
 
@@ -160,19 +169,19 @@
                 <div class="mt-1 text-[11px] text-white/45">{{ h.completed_count }} done</div>
               </div> -->
               <div class="shrink-0 text-right">
-  <template v-if="advanced">
-    <div class="text-sm font-semibold text-white/90">
-      {{ Math.round(h.completion_rate * 100) }}%
-    </div>
-    <div class="mt-1 text-[11px] text-white/45">
-      {{ h.completed_count }} done
-    </div>
-  </template>
+                <template v-if="advanced">
+                  <div class="text-sm font-semibold text-white/90">
+                    {{ Math.round(h.completion_rate * 100) }}%
+                  </div>
+                  <div class="mt-1 text-[11px] text-white/45">
+                    {{ h.completed_count }} done
+                  </div>
+                </template>
 
-  <div v-else class="text-[11px] text-white/55">
-    {{ h.frequency === 'daily' ? 'Daily habit' : 'Weekly habit' }}
-  </div>
-</div>
+                <div v-else class="text-[11px] text-white/55">
+                  {{ h.frequency === 'daily' ? 'Daily habit' : 'Weekly habit' }}
+                </div>
+              </div>
 
 
             </div>
@@ -188,22 +197,53 @@
       <section class="rounded-2xl border border-white/10 bg-slate-950/60 px-5 py-5 lg:px-6 lg:py-6 shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
   <div class="flex items-start justify-between gap-4">
     <div>
-      <h2 class="text-lg font-semibold text-slate-100">Insights</h2>
+      <h2 class="text-lg font-semibold text-slate-100">What worked</h2>
       <p class="mt-1 text-xs text-white/55">
-        A few gentle observations from this window.
+        Data-backed patterns from this window.
       </p>
     </div>
-    <div class="shrink-0 rounded-full border border-white/10 bg-black/20 px-2.5 py-1 text-[10px] text-white/60">
-      {{ advanced ? 'Advanced' : 'Calm' }}
+
+    <div v-if="advanced && report.delta_label"
+      class="shrink-0 rounded-full border border-white/10 bg-black/20 px-2.5 py-1 text-[10px] text-white/60">
+      {{ report.delta_label }}
     </div>
   </div>
 
   <div class="mt-4 space-y-2 text-sm text-slate-200">
-    <p v-for="(s, i) in insightSentences" :key="i">
-      • {{ s }}
-    </p>
+    <p v-for="(s, i) in report.what_worked" :key="i">• {{ s }}</p>
+  </div>
+
+  <div v-if="advanced" class="mt-4 rounded-xl border border-white/10 bg-black/10 p-4 text-[11px] text-white/70">
+    <div class="font-semibold uppercase tracking-[0.16em] text-white/55 mb-2">Correlations</div>
+    <div class="grid gap-2 sm:grid-cols-2">
+      <div>Sleep → Mood: <span class="text-white/90">{{ fmtR(report.correlations.sleep_to_mood) }}</span></div>
+      <div>Habits → Stress: <span class="text-white/90">{{ fmtR(report.correlations.habit_completion_to_stress) }}</span></div>
+      <div>Sleep → Stress: <span class="text-white/90">{{ fmtR(report.correlations.sleep_to_stress) }}</span></div>
+      <div>Energy → Mood: <span class="text-white/90">{{ fmtR(report.correlations.energy_to_mood) }}</span></div>
+    </div>
   </div>
 </section>
+
+      <section
+        class="rounded-2xl border border-white/10 bg-slate-950/60 px-5 py-5 lg:px-6 lg:py-6 shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <h2 class="text-lg font-semibold text-slate-100">Insights</h2>
+            <p class="mt-1 text-xs text-white/55">
+              A few gentle observations from this window.
+            </p>
+          </div>
+          <div class="shrink-0 rounded-full border border-white/10 bg-black/20 px-2.5 py-1 text-[10px] text-white/60">
+            {{ advanced ? 'Advanced' : 'Calm' }}
+          </div>
+        </div>
+
+        <div class="mt-4 space-y-2 text-sm text-slate-200">
+          <p v-for="(s, i) in insightSentences" :key="i">
+            • {{ s }}
+          </p>
+        </div>
+      </section>
 
 
       <!-- Teaser: insights -->
@@ -268,12 +308,18 @@ function fmtSleep(v: number | null) {
 function fmtPct(v: number | null) {
   return v == null ? '—' : `${Math.round(v * 100)}%`
 }
-function fmtDelta(v: number | null, kind: 'sleep' | 'mood' | 'stress' | 'energy') {
+function fmtDelta(
+  v: number | null,
+  kind: 'sleep' | 'mood' | 'stress' | 'energy',
+  label?: string
+) {
   if (v == null) return '—'
   const sign = v > 0 ? '+' : ''
-  if (kind === 'sleep') return `${sign}${v.toFixed(1)}h`
-  return `${sign}${v.toFixed(1)}`
+  const base = kind === 'sleep' ? `${sign}${v.toFixed(1)}h` : `${sign}${v.toFixed(1)}`
+  return label ? `${base} ${label}` : base
 }
+
+
 
 const sortedHabits = computed(() => {
   const list = report.value?.habits?.performance || []
@@ -318,5 +364,20 @@ const insightSentences = computed(() => {
 
   return out.slice(0, advanced.value ? 4 : 3)
 })
+
+const keyTakeaway = computed(() => {
+  if (!report.value) return ''
+  const s = report.value.summary
+  const pct = typeof s?.habit_completion_rate === 'number' ? Math.round(s.habit_completion_rate * 100) : null
+  if (pct != null && pct < 35) return 'This window looks heavier — keep goals tiny and protect recovery.'
+  if (pct != null && pct >= 70) return 'Nice consistency — you’re building real momentum.'
+  if (typeof s?.sleep_avg === 'number' && s.sleep_avg < 6.2) return 'Sleep is the leverage point right now — small evening shifts could help most.'
+  return 'Steady progress — a little consistency will compound.'
+})
+
+function fmtR(v: number | null) {
+  if (typeof v !== 'number' || !Number.isFinite(v)) return '—'
+  return (Math.round(v * 100) / 100).toFixed(2)
+}
 
 </script>

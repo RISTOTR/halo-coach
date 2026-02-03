@@ -107,20 +107,19 @@
 
           <!-- Preview with fade -->
           <div class="relative mt-2">
-  <div
-    class="space-y-2 text-sm leading-relaxed text-slate-200"
-    :class="isCollapsed ? 'max-h-40 overflow-hidden' : 'max-h-64 overflow-auto pr-1'"
-  >
-    <p v-for="(p, idx) in previewParagraphs" :key="idx">
-      {{ p }}
-    </p>
-  </div>
+            <div  ref="previewEl" class="space-y-2 text-sm leading-relaxed text-slate-200"
+              :class="isCollapsed ? 'max-h-40 overflow-hidden' : 'max-h-64 overflow-auto pr-1'">
+              <p v-for="(p, idx) in previewParagraphs" :key="idx">
+                {{ p }}
+              </p>
+            </div>
 
-  <div
-    v-if="isCollapsed && (paragraphs.length > previewParagraphs.length)"
-    class="pointer-events-none absolute bottom-0 left-0 h-10 w-full bg-gradient-to-t from-slate-950/95 to-transparent"
-  />
-</div>
+            <div
+  v-if="isCollapsed && (hasOverflow || paragraphs.length > previewParagraphs.length)"
+  class="pointer-events-none absolute bottom-0 left-0 h-10 w-full bg-gradient-to-t from-slate-950/95 to-transparent"
+/>
+
+          </div>
 
 
 
@@ -135,14 +134,15 @@
         </div>
 
         <div class="mt-3 flex items-center justify-between rounded-xl border border-white/10 bg-black/10 p-3">
-  <div>
-    <div class="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">Quick reset</div>
-    <div class="mt-1 text-xs text-white/55">60s slow exhale breathing.</div>
-  </div>
-  <button class="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/80 hover:bg-white/10">
-    Start
-  </button>
-</div>
+          <div>
+            <div class="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">Quick reset</div>
+            <div class="mt-1 text-xs text-white/55">60s slow exhale breathing.</div>
+          </div>
+          <button
+            class="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/80 hover:bg-white/10">
+            Start
+          </button>
+        </div>
 
 
         <!-- Always visible action -->
@@ -203,6 +203,19 @@
                 {{ p }}
               </p>
             </div>
+
+            <div v-if="measuredLine"
+              class="mt-4 flex items-start gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2">
+              <span
+                class="mt-0.5 rounded-full border border-white/10 bg-black/20 px-2 py-0.5 text-[10px] font-medium text-white/60">
+                Data-backed
+              </span>
+              <p class="text-xs leading-relaxed text-white/75">
+                {{ measuredLine }}
+              </p>
+            </div>
+
+
 
             <div class="mt-5 rounded-xl border border-white/10 bg-slate-900/40 p-3">
               <div class="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">
@@ -269,7 +282,7 @@ const statusLabel = computed(() => {
   return 'Ready'
 })
 
-const paragraphs = computed(() => {
+const rawLines = computed(() => {
   const raw = (props.aiSummary || '').trim()
   if (!raw) return []
   return raw
@@ -278,14 +291,39 @@ const paragraphs = computed(() => {
     .filter(Boolean)
 })
 
+const measuredLine = computed(() => {
+  // We append:
+  // "—" then the measured sentence
+  const lines = rawLines.value
+  const idx = lines.findIndex((l) => l === '—' || l === '---')
+  if (idx === -1) return null
+  const next = lines[idx + 1]
+  if (!next) return null
+  return next
+})
+
+const paragraphs = computed(() => {
+  const lines = rawLines.value
+  if (!lines.length) return []
+
+  const idx = lines.findIndex((l) => l === '—' || l === '---')
+  if (idx === -1) return lines
+
+  // everything before separator is the reflection body
+  return lines.slice(0, idx)
+})
+
 const previewParagraphs = computed(() => {
   const limit = isCollapsed.value ? (props.maxParagraphs ?? 2) : (props.maxParagraphs ?? 999)
   return paragraphs.value.slice(0, limit)
 })
 
 const shouldShowReadMore = computed(() => {
-  return isCollapsed.value && paragraphs.value.length > (props.maxParagraphs ?? 2)
+  if (!isCollapsed.value) return false
+  const overByParagraphs = paragraphs.value.length > (props.maxParagraphs ?? 2)
+  return overByParagraphs || hasOverflow.value
 })
+
 
 function clamp(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, n))
@@ -349,6 +387,29 @@ function openModal() {
 function closeModal() {
   isOpen.value = false
 }
+
+const previewEl = ref<HTMLElement | null>(null)
+const hasOverflow = ref(false)
+
+function measureOverflow() {
+  const el = previewEl.value
+  if (!el) {
+    hasOverflow.value = false
+    return
+  }
+  // small tolerance to avoid off-by-1
+  hasOverflow.value = el.scrollHeight > el.clientHeight + 2
+}
+
+watch(
+  () => [props.aiSummary, isCollapsed.value, props.maxParagraphs],
+  async () => {
+    await nextTick()
+    measureOverflow()
+  },
+  { immediate: true }
+)
+
 
 watch(
   () => props.aiSummary,
