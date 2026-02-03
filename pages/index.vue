@@ -57,7 +57,8 @@
         </div>
 
         <!-- Habits (move here) -->
-        <section class="rounded-2xl border border-white/10 bg-slate-950/60 px-5 py-5 lg:px-6 lg:py-6 shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
+        <section
+          class="rounded-2xl border border-white/10 bg-slate-950/60 px-5 py-5 lg:px-6 lg:py-6 shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
           <div class="flex items-end justify-between gap-3 mb-4">
             <h2 class="text-lg font-semibold text-slate-100">
               Your habits today
@@ -95,7 +96,8 @@
                       </span>
                     </button>
 
-                    <span class="min-w-0 flex-1 truncate font-medium text-slate-100" :class="h.completed_today ? 'text-slate-100' : 'text-slate-100'">
+                    <span class="min-w-0 flex-1 truncate font-medium text-slate-100"
+                      :class="h.completed_today ? 'text-slate-100' : 'text-slate-100'">
                       {{ h.name }}
                     </span>
                   </div>
@@ -111,10 +113,9 @@
                   </span>
 
                   <!-- status pill -->
-                  <span class="rounded-full border px-2 py-0.5 text-[10px]"
-      :class="h.completed_today
-        ? 'border-emerald-400/20 bg-emerald-500/10 text-emerald-200'
-        : 'border-white/10 bg-black/10 text-white/55'">
+                  <span class="rounded-full border px-2 py-0.5 text-[10px]" :class="h.completed_today
+                    ? 'border-emerald-400/20 bg-emerald-500/10 text-emerald-200'
+                    : 'border-white/10 bg-black/10 text-white/55'">
                     {{ h.completed_today ? 'Done' : 'Not done' }}
                   </span>
                 </div>
@@ -130,62 +131,56 @@
 
         <!-- Patterns (move here) -->
         <!-- Patterns -->
-<section
-  class="rounded-2xl border border-white/10 bg-slate-950/60 px-5 py-5 lg:px-6 lg:py-6 shadow-[0_18px_45px_rgba(0,0,0,0.45)]"
->
-  <div class="flex items-start justify-between gap-4">
-    <div>
-      <h2 class="text-lg font-semibold text-slate-100">
-        Patterns this week
-      </h2>
-      <p class="mt-1 text-xs text-white/55">
-        Last 7 days · {{ trendDaysCount }} check-ins
-      </p>
-    </div>
+        <section
+          class="rounded-2xl border border-white/10 bg-slate-950/60 px-5 py-5 lg:px-6 lg:py-6 shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <h2 class="text-lg font-semibold text-slate-100">
+                Patterns this week
+              </h2>
+              <p class="mt-1 text-xs text-white/55">
+                Last 7 days · {{ trendDaysCount }} check-ins
+              </p>
+            </div>
 
-    <div class="shrink-0 rounded-full border border-white/10 bg-black/20 px-2.5 py-1 text-[10px] text-white/60">
-      {{ trendStatus }}
-    </div>
-  </div>
+            <div class="shrink-0 rounded-full border border-white/10 bg-black/20 px-2.5 py-1 text-[10px] text-white/60">
+              {{ trendStatus }}
+            </div>
+          </div>
 
-  <div v-if="trendLoading" class="mt-4 text-sm text-slate-400">
-    Loading weekly trends…
-  </div>
+          <div v-if="trendLoading" class="mt-4 text-sm text-slate-400">
+            Loading weekly trends…
+          </div>
 
-  <!-- Not enough data -->
-  <div
-    v-else-if="trendDaysCount < 3"
-    class="mt-4 rounded-xl border border-white/10 bg-black/10 p-4"
-  >
-    <div class="text-sm text-slate-200">
-      Not enough data yet.
-    </div>
-    <p class="mt-1 text-xs text-white/55">
-      Add a couple more daily check-ins and Halo will start showing meaningful weekly patterns.
-    </p>
+          <!-- Not enough data -->
+          <div v-else-if="trendDaysCount < 3" class="mt-4 rounded-xl border border-white/10 bg-black/10 p-4">
+            <div class="text-sm text-slate-200">
+              Not enough data yet.
+            </div>
+            <p class="mt-1 text-xs text-white/55">
+              Add a couple more daily check-ins and Halo will start showing meaningful weekly patterns.
+            </p>
 
-    <div class="mt-3">
-      <NuxtLink
-        to="/check-in"
-        class="inline-flex items-center justify-center rounded-xl border border-white/10 bg-emerald-500/15 px-3 py-2 text-xs font-medium text-emerald-200 hover:bg-emerald-500/20"
-      >
-        Complete check-in →
-      </NuxtLink>
-    </div>
-  </div>
+            <div class="mt-3">
+              <NuxtLink to="/check-in"
+                class="inline-flex items-center justify-center rounded-xl border border-white/10 bg-emerald-500/15 px-3 py-2 text-xs font-medium text-emerald-200 hover:bg-emerald-500/20">
+                Complete check-in →
+              </NuxtLink>
+            </div>
+          </div>
 
-  <!-- Charts -->
-  <div v-else class="mt-4 grid gap-6 md:grid-cols-3">
-    <MiniTrendCard title="Sleep" :points="sleepSeries" />
-    <MiniTrendCard title="Mood" :points="moodSeries" />
-    <MiniTrendCard title="Stress" :points="stressSeries" />
-  </div>
+          <!-- Charts -->
+          <div v-else class="mt-4 grid gap-6 md:grid-cols-3">
+            <MiniTrendCard title="Sleep" :points="sleepSeries" />
+            <MiniTrendCard title="Mood" :points="moodSeries" />
+            <MiniTrendCard title="Stress" :points="stressSeries" />
+          </div>
 
-  <!-- subtle footnote -->
-  <div v-if="!trendLoading && trendDaysCount >= 3" class="mt-4 text-[11px] text-white/40">
-    Tip: trends update after each daily check-in.
-  </div>
-</section>
+          <!-- subtle footnote -->
+          <div v-if="!trendLoading && trendDaysCount >= 3" class="mt-4 text-[11px] text-white/40">
+            Tip: trends update after each daily check-in.
+          </div>
+        </section>
 
       </div>
 
@@ -200,9 +195,82 @@
 
 
     <NextFocusCard
-      @openCheckIn="navigateTo('/check-in')"
-     @start-preset="startExperiment"
-    />
+  @open-check-in="navigateTo('/check-in')"
+  @start-preset="startExperiment"
+/>
+
+<Teleport to="body">
+  <div
+    v-if="replaceConfirmOpen"
+    class="fixed inset-0 z-50 flex items-center justify-center px-4 py-6"
+    @keydown.esc.prevent="replaceConfirmOpen = false"
+  >
+    <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" @click="replaceConfirmOpen = false" />
+
+    <div
+      class="relative w-full max-w-lg rounded-2xl border border-white/10 bg-slate-950/90 shadow-[0_30px_80px_rgba(0,0,0,0.65)]"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Replace experiment"
+    >
+      <div class="flex items-start justify-between gap-4 border-b border-white/10 px-5 py-4">
+        <div>
+          <div class="text-xs font-semibold uppercase tracking-[0.2em] text-white/55">
+            Experiment already active
+          </div>
+          <div class="mt-1 text-base font-semibold text-slate-100">
+            Replace it?
+          </div>
+        </div>
+
+        <button
+          type="button"
+          class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-white/80 hover:bg-white/10"
+          @click="replaceConfirmOpen = false"
+        >
+          Close
+        </button>
+      </div>
+
+      <div class="px-5 py-4 space-y-3">
+        <p class="text-sm text-white/75">
+          Starting a new experiment will end the current one as <span class="text-white/90 font-medium">abandoned</span>.
+        </p>
+
+        <div v-if="activeExpFrom409" class="rounded-xl border border-white/10 bg-black/10 p-3">
+          <div class="text-[11px] uppercase tracking-[0.18em] text-white/45 font-semibold">
+            Current experiment
+          </div>
+          <div class="mt-1 text-sm text-slate-100">
+            {{ activeExpFrom409.title || 'Untitled experiment' }}
+          </div>
+          <div class="mt-1 text-xs text-white/55">
+            Started {{ activeExpFrom409.start_date || '—' }}
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-1">
+          <button
+            type="button"
+            class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium text-white/80 hover:bg-white/10"
+            @click="replaceConfirmOpen = false"
+          >
+            Keep current
+          </button>
+
+          <button
+            type="button"
+            class="rounded-xl border border-emerald-500/30 bg-emerald-500/15 px-4 py-2 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20"
+            @click="confirmReplace"
+          >
+            Replace & start
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</Teleport>
+
     <WeeklyGoalsCard />
     <WeeklyAiReportCard />
   </div>
@@ -232,6 +300,7 @@ type DailyMetricsRow = {
 const supabase = useSupabaseClient()
 const user = useSupabaseUser()
 
+
 // Today’s metrics
 const metrics = ref<DailyMetricsRow | null>(null)
 const loading = ref(true)
@@ -257,6 +326,8 @@ const aiLoading = ref(true)
 
 // Optional: lightweight per-section errors (useful for debugging / banners)
 const errors = ref<{ today?: string; habits?: string; trends?: string; ai?: string }>({})
+
+const uid = (user.value as any)?.id || (user.value as any)?.sub
 
 const completedHabitsCount = computed(() =>
   habits.value.filter((h) => h.completed_today).length
@@ -422,9 +493,8 @@ async function confirmReplace() {
 
 
 async function loadAll() {
-  const uid = (user.value as any)?.id || (user.value as any)?.sub
-
-  if (!uid) {
+  let id = uid
+  if (!id) {
     // Reset state for logged-out / not-ready sessions
     metrics.value = null
     habits.value = []
@@ -442,19 +512,20 @@ async function loadAll() {
 
   // parallel load = smoother dashboard
   await Promise.allSettled([
-    loadToday(uid),
-    loadHabits(uid),
-    loadTrends(uid),
-    loadAI(uid),
+    loadToday(id),
+    loadHabits(id),
+    loadTrends(id),
+    loadAI(id),
     expFlow.loadActive()
   ])
 }
 
 onMounted(loadAll)
+
 watch(
-  () => user.value?.sub,
-  (uid) => {
-    if (uid) loadAll()
+  () => uid.value,
+  (newUid) => {
+    if (newUid) loadAll()
   },
   { immediate: true }
 )

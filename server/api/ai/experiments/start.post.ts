@@ -66,6 +66,7 @@ export default defineEventHandler(async (event) => {
       .eq('id', active[0].id)
       .eq('user_id', uid)
       .eq('status', 'active')
+      .is('end_date', null)
 
     if (abandonErr) throw createError({ statusCode: 500, statusMessage: abandonErr.message })
   }

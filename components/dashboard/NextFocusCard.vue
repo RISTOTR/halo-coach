@@ -71,15 +71,15 @@
           <button
             v-if="o.preset"
             class="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20"
-            @click="$emit('startPreset', o.preset)"
+            @click="emit('start-preset', { ...o.preset, title: o.title })"
           >
-            Start {{ o.preset.title }} →
+            Start “{{ o.title }}” →
           </button>
 
           <button
             v-else
             class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-white/80 hover:bg-white/10"
-            @click="$emit('openCheckIn')"
+            @click="emit('open-check-in')"
           >
             Add a tiny action →
           </button>
@@ -96,15 +96,6 @@
 <script setup lang="ts">
 type MetricKey = 'sleep_hours' | 'mood' | 'stress' | 'energy'
 
-type NextFocusOption = {
-  id: string
-  title: string
-  why: string
-  effort: 'low' | 'moderate' | 'high'
-  impact: 'low' | 'moderate' | 'high'
-  preset: { title: string; target_metric: MetricKey } | null
-}
-
 type Preset = {
   title: string
   leverType: 'metric' | 'habit' | 'custom'
@@ -116,9 +107,18 @@ type Preset = {
   baselineDays?: number
 }
 
-defineEmits<{
-  (e: 'startPreset', preset: Preset): void
-  (e: 'openCheckIn'): void
+type NextFocusOption = {
+  id: string
+  title: string
+  why: string
+  effort: 'low' | 'moderate' | 'high'
+  impact: 'low' | 'moderate' | 'high'
+  preset: Preset | null
+}
+
+const emit = defineEmits<{
+  (e: 'start-preset', preset: Preset): void
+  (e: 'open-check-in'): void
 }>()
 
 
