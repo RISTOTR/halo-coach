@@ -20,6 +20,11 @@
       </div>
     </section>
 
+    <div v-if="formError" class="mb-3 rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-xs text-red-200">
+  {{ formError }}
+</div>
+
+
     <!-- MAIN GRID (dashboard-like) -->
     <section class="grid gap-6 lg:grid-cols-3">
       <!-- LEFT (2/3): Metrics + Reflection + Habits -->
@@ -512,6 +517,16 @@ async function loadTodayCheckin() {
   }
 }
 
+const formError = ref('')
+
+function parseNumber(input: any) {
+  if (input == null) return null
+  const s = String(input).trim().replace(',', '.')
+  if (!s) return null
+  const n = Number(s)
+  return Number.isFinite(n) ? n : null
+}
+
 const handleSubmit = async () => {
   statusMessage.value = ''
   saving.value = true
@@ -529,15 +544,20 @@ const handleSubmit = async () => {
     const payload = {
       user_id: currentUser.id,
       date: today,
-      sleep_hours: sleepHours.value,
-      steps: movementMinutes.value, // DB col is still "steps"
+      sleep_hours: parseNumber(sleepHours.value),
+      steps: parseNumber(movementMinutes.value), // DB col is still "steps"
       mood: mood.value,
       energy: energy.value,
       stress: stress.value,
-      water_liters: waterLiters.value,
-      outdoor_minutes: outdoorMinutes.value,
+      water_liters: parseNumber(waterLiters.value),
+      outdoor_minutes: parseNumber(outdoorMinutes.value),
       habits_summary: habitsSummary.value,
       habits_status: habitsStatus.value
+    }
+
+    if (sleepHours.value && payload.sleep_hours == null) {
+      formError.value = 'Sleep hours must be a number (e.g. 7.5).'
+      return
     }
 
     const { error: metricsError } = await supabase
@@ -590,9 +610,13 @@ const handleSubmit = async () => {
     statusMessage.value = 'Reflection updated.'
     await expFlow.loadActive()
 
-  } catch (e) {
-    console.error(e)
-    statusMessage.value = 'Something went wrong.'
+  } catch (e: any) {
+    // Nuxt $fetch errors typically have e.data.statusMessage
+    formError.value =
+      e?.data?.statusMessage ||
+      e?.data?.message ||
+      e?.message ||
+      'Something went wrong while saving your check-in.'
   } finally {
     loadingAi.value = false
     saving.value = false

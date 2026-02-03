@@ -1,6 +1,11 @@
 // server/api/ai/experiments/[id]/end.post.ts
-import { defineEventHandler, createError } from 'h3'
+import { defineEventHandler, createError, readBody } from 'h3'
+import { z } from 'zod'
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
+
+const bodySchema = z.object({
+  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional()
+})
 
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)
@@ -12,6 +17,9 @@ export default defineEventHandler(async (event) => {
   const id = String(event.context.params?.id || '')
   const supabase = await serverSupabaseClient(event)
 
+  const { endDate } = bodySchema.parse(await readBody(event).catch(() => ({})))
+  const end_date = endDate ?? new Date().toISOString().slice(0, 10)
+
   const { data: exp, error: expErr } = await supabase
     .from('experiments')
     .select('id,user_id,status,start_date,end_date,title,target_metric')
@@ -22,7 +30,7 @@ export default defineEventHandler(async (event) => {
   if (expErr) throw createError({ statusCode: 500, statusMessage: expErr.message })
   if (!exp) throw createError({ statusCode: 404, statusMessage: 'Experiment not found' })
 
-  // If already ended, be idempotent
+  // Idempotent
   if (exp.end_date) {
     return { success: true, alreadyEnded: true, experiment: exp }
   }
@@ -31,13 +39,11 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 409, statusMessage: `Cannot end experiment in status=${exp.status}` })
   }
 
-  const today = new Date().toISOString().slice(0, 10)
-
   const { data: updated, error: updErr } = await supabase
     .from('experiments')
     .update({
-      end_date: today,
-      status: 'ended', // or 'ended_pending_review'
+      end_date,
+      status: 'ended_pending_review',
       updated_at: new Date().toISOString()
     })
     .eq('id', id)

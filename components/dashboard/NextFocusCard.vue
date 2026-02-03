@@ -1,11 +1,13 @@
 <!-- components/dashboard/NextFocusCard.vue -->
 <template>
-  <div class="rounded-2xl border border-white/10 bg-slate-950/60 px-5 py-5 lg:px-6 lg:py-6 shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
+  <div
+    class="rounded-2xl border border-white/10 bg-slate-950/60 px-5 py-5 lg:px-6 lg:py-6 shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
     <div class="mb-3 flex items-start justify-between gap-3">
       <div class="min-w-0">
         <div class="flex flex-wrap items-center gap-2">
           <h2 class="text-lg font-semibold text-slate-100">Next focus</h2>
-          <span v-if="statusPill" class="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-medium text-slate-200">
+          <span v-if="statusPill"
+            class="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-medium text-slate-200">
             {{ statusPill }}
           </span>
         </div>
@@ -16,9 +18,7 @@
 
       <button
         class="shrink-0 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-medium text-white/80 hover:bg-white/10 disabled:opacity-50"
-        @click="load"
-        :disabled="loading"
-      >
+        @click="load" :disabled="loading">
         <span v-if="loading">Updating…</span>
         <span v-else>Refresh</span>
       </button>
@@ -37,11 +37,7 @@
     </div>
 
     <div v-else class="space-y-3">
-      <section
-        v-for="(o, idx) in options"
-        :key="o.id"
-        class="rounded-xl border border-white/10 bg-black/10 p-4"
-      >
+      <section v-for="(o, idx) in options" :key="o.id" class="rounded-xl border border-white/10 bg-black/10 p-4">
         <div class="flex items-start justify-between gap-3">
           <div class="min-w-0">
             <div class="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/55">
@@ -61,28 +57,27 @@
           </div>
 
           <span
-            class="shrink-0 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-medium text-white/70"
-          >
+            class="shrink-0 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-medium text-white/70">
             {{ o.id }}
           </span>
         </div>
 
         <div class="mt-3 flex flex-wrap gap-2">
-          <button
-            v-if="o.preset"
+          <button v-if="o.preset"
             class="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20"
-            @click="emit('start-preset', { ...o.preset, title: o.title })"
-          >
+            @click="emit('start-preset', { ...o.preset, title: o.title })">
             Start “{{ o.title }}” →
           </button>
 
-          <button
-            v-else
+          <button v-else
             class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-white/80 hover:bg-white/10"
-            @click="emit('open-check-in')"
-          >
+            @click="emit('open-check-in')">
             Add a tiny action →
           </button>
+          <p v-if="o.preset" class="mt-2 text-[11px] text-white/45">
+            Experiment lever: {{ o.preset.leverType }} · {{ o.preset.leverRef }} → {{ o.preset.targetMetric }}
+          </p>
+
         </div>
       </section>
 
@@ -150,6 +145,7 @@ async function load() {
     const res = await $fetch('/api/next-focus', { query: { date: todayISO() } }) as any
     options.value = (res?.options || []) as NextFocusOption[]
     period.value = res?.period || null
+    console.log('Options', options.value)
   } catch (e: any) {
     error.value = e?.data?.statusMessage || e?.message || 'Could not load next focus.'
     options.value = []

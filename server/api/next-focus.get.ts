@@ -4,61 +4,69 @@ import { z } from 'zod'
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
 
 const querySchema = z.object({
-  date: z.string().optional() // YYYY-MM-DD (defaults today)
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional()
 })
 
 type MetricKey = 'sleep_hours' | 'mood' | 'stress' | 'energy'
-
+type TargetMetric = 'energy' | 'stress' | 'mood' | 'sleep_hours' | 'steps' | 'water_liters' | 'outdoor_minutes'
 type Effort = 'low' | 'moderate' | 'high'
 type Impact = 'low' | 'moderate' | 'high'
 
+type Preset = {
+  title: string
+  leverType: 'metric' | 'habit' | 'custom'
+  leverRef?: string
+  targetMetric: TargetMetric
+  effortEstimate?: Effort
+  expectedImpact?: Impact
+  recommendedDays?: number
+  baselineDays?: number
+}
+
 type NextFocusOption = {
-  id: 'sleep' | 'outdoor' | 'hydration' | 'movement' | 'stress_downshift'
+  id: string
   title: string
   why: string
   effort: Effort
   impact: Impact
-  preset: { 
-  title: 'Sleep consistency',
-  leverType: 'metric',
-  leverRef: 'sleep_hours',
-  targetMetric: 'energy',
-  effortEstimate: 'low',
-  expectedImpact: 'high',
-  recommendedDays: 7,
-  baselineDays: 30
-}
-  score: number // internal
+  preset: Preset | null
 }
 
 function isoDate(d: Date) {
   return d.toISOString().slice(0, 10)
+}
+function daysAgoISO(n: number, from = new Date()) {
+  const d = new Date(from)
+  d.setDate(d.getDate() - n)
+  return isoDate(d)
+}
+
+function mean(nums: number[]) {
+  if (!nums.length) return null
+  return nums.reduce((a, b) => a + b, 0) / nums.length
+}
+function stddev(nums: number[]) {
+  if (nums.length < 2) return null
+  const m = mean(nums)
+  if (m == null) return null
+  const v = nums.reduce((acc, x) => acc + (x - m) ** 2, 0) / (nums.length - 1)
+  return Math.sqrt(v)
+}
+function values(rows: any[], key: MetricKey) {
+  return rows.map(r => r?.[key]).filter((v: any): v is number => typeof v === 'number' && Number.isFinite(v))
 }
 
 function clamp(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, n))
 }
 
-function pickTop2(opts: NextFocusOption[]) {
-  const sorted = [...opts].sort((a, b) => b.score - a.score)
-
-  // Option A = lowest effort among top candidates
-  const effortRank: Record<Effort, number> = { low: 0, moderate: 1, high: 2 }
-
-  const best = sorted[0]
-  if (!best) return []
-
-  // Choose A from the top ~4 to keep it relevant, then choose B as best overall not equal to A
-  const topPool = sorted.slice(0, 4)
-  const optionA = topPool.sort((a, b) => effortRank[a.effort] - effortRank[b.effort])[0] || best
-
-  const optionB = sorted.find((o) => o.id !== optionA.id) || null
-
-  const out = [optionA]
-  if (optionB) out.push(optionB)
-
-  // Remove internal score before returning
-  return out.map(({ score, ...rest }) => rest)
+// simple “weak signal” score helper
+function scoreSignal(n: number, threshold: number) {
+  const a = Math.abs(n)
+  if (a >= threshold * 2) return 3
+  if (a >= threshold * 1.25) return 2
+  if (a >= threshold) return 1
+  return 0
 }
 
 export default defineEventHandler(async (event) => {
@@ -67,299 +75,175 @@ export default defineEventHandler(async (event) => {
 
   const uid = (user as any).id || (user as any).sub
   if (!uid) throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
+  console.log('next-focus uid', uid)
 
   const supabase = await serverSupabaseClient(event)
   const { date } = querySchema.parse(getQuery(event))
 
-  const today = isoDate(date ? new Date(date) : new Date())
+  const end = date ? new Date(date) : new Date()
+  const endISO = isoDate(end)
+  const startISO = daysAgoISO(6, end) // last 7 days inclusive
 
-  // Pull last 7d overview (you already have this endpoint shape)
-  // We call it internally by querying the same tables directly (avoid HTTP self-call).
-  // If you prefer, we can refactor later to reuse a shared util.
-  const start7 = (() => {
-    const d = new Date(`${today}T00:00:00Z`)
-    d.setUTCDate(d.getUTCDate() - 6)
-    return isoDate(d)
-  })()
-
-  // ---- Metrics (last 7 days) ----
-  const { data: metricsRows, error: metricsErr } = await supabase
+  const { data: metricsRows, error: mErr } = await supabase
     .from('daily_metrics')
-    .select('date,sleep_hours,mood,stress,energy,water_liters,steps,outdoor_minutes')
+    .select('date,sleep_hours,mood,stress,energy')
     .eq('user_id', uid)
-    .gte('date', start7)
-    .lte('date', today)
+    .gte('date', startISO)
+    .lte('date', endISO)
     .order('date', { ascending: true })
 
-  if (metricsErr) throw createError({ statusCode: 500, statusMessage: metricsErr.message })
-  const rows = (metricsRows || []) as any[]
+  if (mErr) throw createError({ statusCode: 500, statusMessage: mErr.message })
 
-  const daysWithCheckin = rows.length
+   const rows = metricsRows || []
 
-  // If there’s basically no data, return a gentle default
-  if (daysWithCheckin < 2) {
-    return {
-      success: true,
-      period: { start: start7, end: today, checkins: daysWithCheckin },
-      options: [
-        {
-          id: 'stress_downshift',
-          title: 'Downshift your nervous system',
-          why: 'With only a little data so far, the best move is a tiny daily reset while you keep logging.',
-          effort: 'low',
-          impact: 'moderate',
-          preset: null
-        }
-      ]
+  // Count only rows that contain at least ONE numeric core metric
+  const checkinRows = rows.filter((r) =>
+    ['sleep_hours', 'mood', 'stress', 'energy'].some(
+      (k) => typeof (r as any)?.[k] === 'number' && Number.isFinite((r as any)?.[k])
+    )
+  )
+  const checkins = checkinRows.length
+  console.log('metrics rows', metricsRows, 'checkins_numeric', checkins)
+
+  // honest gating: require at least 3 *numeric* check-ins
+  if (checkins < 3) {
+    return { period: { start: startISO, end: endISO, checkins }, options: [] }
+  }
+
+  // Use checkinRows (not raw rows) for signals
+  const sleep = values(checkinRows, 'sleep_hours')
+  const mood = values(checkinRows, 'mood')
+  const stress = values(checkinRows, 'stress')
+  const energy = values(checkinRows, 'energy')
+
+  const sleepAvg = mean(sleep)
+  const sleepSd = sleep.length >= 3 ? stddev(sleep) : null
+
+  const stressAvg = mean(stress)
+  const energyAvg = mean(energy)
+  const moodAvg = mean(mood)
+
+  // Heuristics (tuneable)
+  const sleepVarianceScore = sleepSd == null ? 0 : scoreSignal(sleepSd, 0.9)
+  const stressHighScore = stressAvg == null ? 0 : scoreSignal(stressAvg - 3.3, 0.6)
+  const energyLowScore = energyAvg == null ? 0 : scoreSignal(3.2 - energyAvg, 0.5)
+  const moodLowScore = moodAvg == null ? 0 : scoreSignal(3.2 - moodAvg, 0.5)
+
+  const candidates: Array<NextFocusOption & { score: number }> = []
+
+  // Sleep consistency: require at least 3 sleep datapoints OR energy datapoints
+  if (sleep.length >= 3 || energy.length >= 3) {
+    if (sleepVarianceScore > 0 || energyLowScore > 0) {
+      const why =
+        sleepVarianceScore > 0
+          ? 'Your sleep looks a bit uneven this week — smoothing it often helps energy and steadiness.'
+          : 'Energy dipped this week; protecting sleep is usually the best first lever.'
+
+      candidates.push({
+        id: 'sleep_consistency',
+        title: 'Sleep consistency',
+        why,
+        effort: 'low',
+        impact: 'high',
+        preset: {
+          title: 'Sleep consistency',
+          leverType: 'metric',
+          leverRef: 'sleep_hours',
+          targetMetric: 'energy',
+          effortEstimate: 'low',
+          expectedImpact: 'high',
+          recommendedDays: 7,
+          baselineDays: 30
+        },
+        score: clamp(sleepVarianceScore * 2 + energyLowScore * 2, 0, 10)
+      })
     }
   }
 
-  // Helpers
-  const nums = (key: string) =>
-    rows.map((r) => r[key]).filter((v: any) => typeof v === 'number' && Number.isFinite(v)) as number[]
+  // Outdoor reset: require at least 3 mood/stress datapoints OR just allow as a gentle default
+  if (stress.length >= 3 || mood.length >= 3) {
+    if (stressHighScore > 0 || moodLowScore > 0) {
+      const why =
+        stressHighScore > 0
+          ? 'Stress looks elevated — a short daily reset outside can help prevent stress from accumulating.'
+          : 'Mood looks a bit low; light + air is a gentle lever that’s easy to sustain.'
 
-  const avg = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null)
-
-  const stddev = (xs: number[]) => {
-    if (xs.length < 2) return null
-    const m = avg(xs)!
-    const variance = xs.reduce((acc, x) => acc + (x - m) ** 2, 0) / (xs.length - 1)
-    return Math.sqrt(variance)
+      candidates.push({
+        id: 'outdoor_reset',
+        title: 'Get light + air daily',
+        why,
+        effort: 'low',
+        impact: 'moderate',
+        preset: {
+          title: 'Get light + air daily',
+          leverType: 'metric',
+          leverRef: 'outdoor_minutes',
+          targetMetric: 'stress',
+          effortEstimate: 'low',
+          expectedImpact: 'moderate',
+          recommendedDays: 7,
+          baselineDays: 30
+        },
+        score: clamp(stressHighScore * 2 + moodLowScore, 0, 10)
+      })
+    }
   }
 
-  const sleepAvg = avg(nums('sleep_hours'))
-  const energyAvg = avg(nums('energy'))
-  const moodAvg = avg(nums('mood'))
-  const stressAvg = avg(nums('stress'))
-  const outdoorAvg = avg(nums('outdoor_minutes'))
-  const waterAvg = avg(nums('water_liters'))
-  const stepsAvg = avg(nums('steps'))
-
-  const sleepVar = stddev(nums('sleep_hours')) // “variance” proxy
-
-  // ---- Habit completion (simple) ----
-  const { data: habits } = await supabase
-    .from('habits')
-    .select('id,archived')
-    .eq('user_id', uid)
-    .or('archived.is.null,archived.eq.false')
-
-  const activeHabitIds = new Set((habits || []).map((h: any) => h.id))
-  const activeHabitCount = activeHabitIds.size
-
-  const { data: entries } = await supabase
-    .from('habit_entries')
-    .select('habit_id,date,completed')
-    .eq('user_id', uid)
-    .gte('date', start7)
-    .lte('date', today)
-
-  const completedEntries = (entries || []).filter((e: any) => e.completed !== false && activeHabitIds.has(e.habit_id))
-
-  const denom = activeHabitCount > 0 ? activeHabitCount * 7 : 0
-  const habitRate = denom > 0 ? completedEntries.length / denom : null
-
-  // ---- Scoring rules (safe, simple) ----
-  // We score candidates 0..100 roughly. Then we pick A (lowest effort among top) and B (best overall).
-  const options: NextFocusOption[] = []
-
-  // Sleep lever
-  {
-    let score = 0
-    const varHigh = typeof sleepVar === 'number' && sleepVar >= 1.1 // tune later
-    const sleepLow = typeof sleepAvg === 'number' && sleepAvg < 6.5
-    const energyLow = typeof energyAvg === 'number' && energyAvg <= 3.2
-    const stressHigh = typeof stressAvg === 'number' && stressAvg >= 3.6
-
-    if (varHigh) score += 30
-    if (sleepLow) score += 25
-    if (energyLow) score += 20
-    if (stressHigh) score += 10
-    score += clamp(daysWithCheckin * 2, 0, 14)
-
-    options.push({
-      id: 'sleep',
-      title: 'Stabilize sleep rhythm',
-      why: varHigh
-        ? 'Sleep looks a bit variable this week — consistency may help your energy and mood stabilize.'
-        : sleepLow
-          ? 'Sleep looks a bit short on average — a small earlier wind-down could lift the whole week.'
-          : 'A steadier wind-down can protect energy without adding pressure.',
-      effort: 'low',
-      impact: (energyLow || stressHigh || varHigh) ? 'high' : 'moderate',
-      preset: { 
-  title: 'Sleep consistency',
-  leverType: 'metric',
-  leverRef: 'sleep_hours',
-  targetMetric: 'energy',
-  effortEstimate: 'low',
-  expectedImpact: 'high',
-  recommendedDays: 7,
-  baselineDays: 30
-},
-      score
-    })
-  }
-
-  // Outdoor lever
-  {
-    let score = 0
-    const outdoorLow = typeof outdoorAvg === 'number' && outdoorAvg < 15
-    const stressHigh = typeof stressAvg === 'number' && stressAvg >= 3.6
-    const moodLow = typeof moodAvg === 'number' && moodAvg <= 3.0
-
-    if (outdoorLow) score += 35
-    if (stressHigh) score += 20
-    if (moodLow) score += 15
-    score += clamp(daysWithCheckin * 2, 0, 14)
-
-    options.push({
-      id: 'outdoor',
-      title: 'Get light + air daily',
-      why: outdoorLow
-        ? 'Outdoor time looks low this week — even a short walk can shift stress and mood.'
-        : 'A short daily reset outside can keep stress from accumulating.',
-      effort: 'low',
-      impact: (outdoorLow && (stressHigh || moodLow)) ? 'high' : 'moderate',
-      preset: { 
-  title: 'Sleep consistency',
-  leverType: 'metric',
-  leverRef: 'sleep_hours',
-  targetMetric: 'energy',
-  effortEstimate: 'low',
-  expectedImpact: 'high',
-  recommendedDays: 7,
-  baselineDays: 30
-},
-      score
-    })
-  }
-
-  // Hydration lever
-  {
-    let score = 0
-    const waterLow = typeof waterAvg === 'number' && waterAvg < 1.4
-    const energyLow = typeof energyAvg === 'number' && energyAvg <= 3.2
-    const stressHigh = typeof stressAvg === 'number' && stressAvg >= 3.6
-
-    if (waterLow) score += 35
-    if (energyLow) score += 15
-    if (stressHigh) score += 10
-    score += clamp(daysWithCheckin * 2, 0, 14)
-
-    options.push({
-      id: 'hydration',
-      title: 'Make hydration effortless',
-      why: waterLow
-        ? 'Hydration looks low this week — a tiny routine can help energy feel steadier.'
-        : 'A simple water cue can support energy without changing much else.',
-      effort: 'low',
-      impact: (waterLow && energyLow) ? 'high' : 'moderate',
-      preset: { 
-  title: 'Sleep consistency',
-  leverType: 'metric',
-  leverRef: 'sleep_hours',
-  targetMetric: 'energy',
-  effortEstimate: 'low',
-  expectedImpact: 'high',
-  recommendedDays: 7,
-  baselineDays: 30
-},
-      score
-    })
-  }
-
-  // Movement lever (only if steps are low AND energy not crashing)
-  {
-    let score = 0
-    const stepsLow = typeof stepsAvg === 'number' && stepsAvg < 4500
-    const energyOk = typeof energyAvg === 'number' && energyAvg >= 2.8
-    const moodLow = typeof moodAvg === 'number' && moodAvg <= 3.0
-
-    if (stepsLow) score += 30
-    if (moodLow) score += 10
-    if (!energyOk) score -= 15 // don’t push movement when energy is low
-    score += clamp(daysWithCheckin * 2, 0, 14)
-
-    options.push({
-      id: 'movement',
-      title: 'Add gentle movement',
-      why: stepsLow
-        ? 'Movement looks a bit low — a 10–15 minute walk can raise baseline mood and focus.'
-        : 'A small daily walk keeps your system “unstuck” without needing motivation.',
+  // One strong block: require numeric energy/stress means
+  if (energyAvg != null && stressAvg != null && energyAvg >= 3.6 && stressAvg <= 3.2) {
+    candidates.push({
+      id: 'one_block',
+      title: 'One meaningful 20-minute block',
+      why: 'When energy is reasonably steady, a single focused block can create momentum without overloading the day.',
       effort: 'moderate',
-      impact: (stepsLow && energyOk) ? 'high' : 'moderate',
-      preset: { 
-  title: 'Sleep consistency',
-  leverType: 'metric',
-  leverRef: 'sleep_hours',
-  targetMetric: 'energy',
-  effortEstimate: 'low',
-  expectedImpact: 'high',
-  recommendedDays: 7,
-  baselineDays: 30
-},
-      score
+      impact: 'high',
+      preset: null,
+      score: 2
     })
   }
-
-  // Stress downshift (good default when stress high)
-  {
-    let score = 0
-    const stressHigh = typeof stressAvg === 'number' && stressAvg >= 3.6
-    const sleepLow = typeof sleepAvg === 'number' && sleepAvg < 6.5
-    const moodLow = typeof moodAvg === 'number' && moodAvg <= 3.0
-
-    if (stressHigh) score += 40
-    if (sleepLow) score += 10
-    if (moodLow) score += 10
-    score += clamp(daysWithCheckin * 2, 0, 14)
-
-    options.push({
-      id: 'stress_downshift',
-      title: 'Protect your stress baseline',
-      why: stressHigh
-        ? 'Stress looks elevated — a daily 60–90 second downshift can prevent carryover.'
-        : 'A tiny daily downshift keeps things steady when the week is busy.',
+  console.log('candidates', candidates)
+  // ✅ Fallback: if no candidates (metrics exist but not enough signal),
+  // return a gentle default so the card never looks broken.
+  if (!candidates.length) {
+    candidates.push({
+      id: 'outdoor_reset',
+      title: 'Get light + air daily',
+      why: 'You have a few check-ins — keep it simple this week. Light + air is a low-effort reset that tends to help stress and mood.',
       effort: 'low',
-      impact: stressHigh ? 'high' : 'moderate',
-      preset: { 
-  title: 'Sleep consistency',
-  leverType: 'metric',
-  leverRef: 'sleep_hours',
-  targetMetric: 'energy',
-  effortEstimate: 'low',
-  expectedImpact: 'high',
-  recommendedDays: 7,
-  baselineDays: 30
-},
-      score
+      impact: 'moderate',
+      preset: {
+        title: 'Get light + air daily',
+        leverType: 'metric',
+        leverRef: 'outdoor_minutes',
+        targetMetric: 'stress',
+        effortEstimate: 'low',
+        expectedImpact: 'moderate',
+        recommendedDays: 7,
+        baselineDays: 30
+      },
+      score: 1
     })
   }
 
-  // If habit logging exists and habit rate is low, slightly boost low-effort options
-  if (typeof habitRate === 'number' && habitRate < 0.35) {
-    for (const o of options) {
-      if (o.effort === 'low') o.score += 6
-    }
-  }
 
-  const picked = pickTop2(options)
+  // Sort by score desc
+  candidates.sort((a, b) => b.score - a.score)
+
+  // pick max 2: A low effort, B higher impact (if available)
+  // Step 1: choose best low-effort
+  const lowEffort = candidates.find(c => c.effort === 'low') || candidates[0]
+  const rest = candidates.filter(c => c.id !== lowEffort?.id)
+
+  // Step 2: choose “highest impact” among remaining
+  let highImpact = rest.find(c => c.impact === 'high') || rest[0] || null
+
+  // if only one candidate exists
+  const options: NextFocusOption[] = []
+  if (lowEffort) options.push(lowEffort)
+  if (highImpact) options.push(highImpact)
 
   return {
-    success: true,
-    period: { start: start7, end: today, checkins: daysWithCheckin },
-    context: {
-      // optional debug (you can remove later)
-      sleep_avg: sleepAvg,
-      sleep_sd: sleepVar,
-      mood_avg: moodAvg,
-      energy_avg: energyAvg,
-      stress_avg: stressAvg,
-      outdoor_avg: outdoorAvg,
-      water_avg: waterAvg,
-      habit_completion_rate: habitRate
-    },
-    options: picked
+    period: { start: startISO, end: endISO, checkins },
+    options
   }
 })
