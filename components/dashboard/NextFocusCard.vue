@@ -83,10 +83,16 @@
 
         <div class="mt-3 flex flex-wrap gap-2">
           <button v-if="o.preset"
-            class="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20 disabled:opacity-50"
-            :disabled="hasActiveExperiment" @click="onStartPreset(o.preset)">
+            class="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20 disabled:opacity-60 disabled:hover:bg-emerald-500/10"
+            :disabled="false" @click="onStartPreset(o.preset)">
             Start {{ o.preset.title }} →
           </button>
+
+          <p v-if="hasActiveExperiment" class="mt-2 text-[11px] text-white/45">
+            Experiment in progress: <span class="text-white/70">{{ activeLabel }}</span>.
+            Starting a new one will ask to replace it.
+          </p>
+
 
 
           <button v-else
@@ -138,11 +144,17 @@ type NextFocusOption = {
   preset: Preset | null
 }
 
-const emit = defineEmits<{
-  (e: 'startPreset', preset: Preset): void
-  (e: 'openCheckIn'): void
-  (e: 'openExperiment'): void
+const props = defineProps<{
+  activeExperiment?: any | null
 }>()
+
+const hasActiveExperiment = computed(() => !!props.activeExperiment)
+const activeLabel = computed(() => {
+  const exp = props.activeExperiment
+  if (!exp) return ''
+  return `${exp.title}${exp.start_date ? ` · started ${exp.start_date}` : ''}`
+})
+
 
 const expFlow = useExperimentFlow()
 
@@ -151,15 +163,6 @@ const loading = ref(false)
 const error = ref('')
 const options = ref<NextFocusOption[]>([])
 const period = ref<{ start: string; end: string; checkins: number } | null>(null)
-
-const hasActiveExperiment = computed(() => !!expFlow.ctx.value.activeExperiment)
-
-const activeLabel = computed(() => {
-  const exp = expFlow.ctx.value.activeExperiment
-  if (!exp) return ''
-  const start = exp.start_date || ''
-  return `${exp.title}${start ? ` · started ${start}` : ''}`
-})
 
 const statusPill = computed(() => {
   if (hasActiveExperiment.value) return 'Experiment active'
@@ -197,7 +200,6 @@ async function load() {
 }
 
 function onStartPreset(preset: Preset) {
-  if (hasActiveExperiment.value) return
   emit('startPreset', preset)
 }
 

@@ -195,9 +195,9 @@
 
 
     <NextFocusCard
+      :active-experiment="expFlow.ctx.activeExperiment"
       @openCheckIn="navigateTo('/check-in')"
       @start-preset="startExperiment"
-      @openExperiment="openExperimentDialog"
     />
 
 
