@@ -195,7 +195,7 @@
 
 
     <NextFocusCard
-      :active-experiment="expFlow.ctx.activeExperiment"
+      :active-experiment="expFlow.ctx.value.activeExperiment"
       @openCheckIn="navigateTo('/check-in')"
       @start-preset="startExperiment"
     />
@@ -457,7 +457,7 @@ async function loadAI(uid: string) {
 }
 
 const expFlow = useExperimentFlow()
-
+console.log('expFlow', expFlow)
 const replaceConfirmOpen = ref(false)
 const pendingPreset = ref<Preset | null>(null)
 const activeExpFrom409 = ref<any | null>(null)
@@ -512,14 +512,16 @@ async function loadAll() {
     loadToday(id),
     loadHabits(id),
     loadTrends(id),
-    loadAI(id),
-    expFlow.loadActive()
-
-
+    loadAI(id)
   ])
 }
 
-onMounted(loadAll)
+onMounted(async () => {
+  loadAll()
+  if (!expFlow.ctx.value.activeExperiment) {
+    await expFlow.loadActive()
+  }
+})
 
 watch(
   () => uid.value,

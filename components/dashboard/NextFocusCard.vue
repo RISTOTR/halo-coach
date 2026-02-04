@@ -95,11 +95,11 @@
 
 
 
-          <button v-else
+          <!-- <button v-else
             class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-white/80 hover:bg-white/10"
             @click="emit('open-check-in')">
             Add a tiny action →
-          </button>
+          </button> -->
           <p v-if="o.preset" class="mt-2 text-[11px] text-white/45">
             Experiment lever: {{ o.preset.leverType }} · {{ o.preset.leverRef }} → {{ o.preset.targetMetric }}
           </p>
@@ -148,7 +148,14 @@ const props = defineProps<{
   activeExperiment?: any | null
 }>()
 
+const emit = defineEmits<{
+  (e: 'startPreset', preset: Preset): void
+  (e: 'openCheckIn'): void
+  (e: 'openExperiment'): void
+}>()
+
 const hasActiveExperiment = computed(() => !!props.activeExperiment)
+console.log('hasActiveExperiment', props.activeExperiment)
 const activeLabel = computed(() => {
   const exp = props.activeExperiment
   if (!exp) return ''
