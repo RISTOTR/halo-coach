@@ -24,6 +24,25 @@
       </button>
     </div>
 
+
+    <div v-if="hasActiveExperiment" class="mb-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3">
+      <div class="text-xs font-semibold text-emerald-100">
+        Experiment in progress
+      </div>
+      <p class="mt-1 text-xs text-emerald-100/70">
+        {{ activeLabel }}. Finish or review it before starting a new focus.
+      </p>
+
+      <div class="mt-3 flex flex-wrap gap-2">
+        <button
+          class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-white/80 hover:bg-white/10"
+          @click="$emit('openExperiment')">
+          View experiment →
+        </button>
+      </div>
+    </div>
+
+
     <div v-if="loading" class="text-[11px] text-slate-300">
       Loading next focus…
     </div>
@@ -64,10 +83,11 @@
 
         <div class="mt-3 flex flex-wrap gap-2">
           <button v-if="o.preset"
-            class="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20"
-            @click="emit('start-preset', { ...o.preset, title: o.title })">
-            Start “{{ o.title }}” →
+            class="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20 disabled:opacity-50"
+            :disabled="hasActiveExperiment" @click="onStartPreset(o.preset)">
+            Start {{ o.preset.title }} →
           </button>
+
 
           <button v-else
             class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-white/80 hover:bg-white/10"
@@ -89,15 +109,22 @@
 </template>
 
 <script setup lang="ts">
+import { computed, ref, onMounted } from 'vue'
+
 type MetricKey = 'sleep_hours' | 'mood' | 'stress' | 'energy'
+type Effort = 'low' | 'moderate' | 'high'
+type Impact = 'low' | 'moderate' | 'high'
+type TargetMetric =
+  | 'energy' | 'stress' | 'mood'
+  | 'sleep_hours' | 'steps' | 'water_liters' | 'outdoor_minutes'
 
 type Preset = {
   title: string
   leverType: 'metric' | 'habit' | 'custom'
   leverRef?: string
-  targetMetric: 'energy' | 'stress' | 'mood' | 'sleep_hours' | 'steps' | 'water_liters' | 'outdoor_minutes'
-  effortEstimate?: 'low' | 'moderate' | 'high'
-  expectedImpact?: 'low' | 'moderate' | 'high'
+  targetMetric: TargetMetric
+  effortEstimate?: Effort
+  expectedImpact?: Impact
   recommendedDays?: number
   baselineDays?: number
 }
@@ -106,15 +133,18 @@ type NextFocusOption = {
   id: string
   title: string
   why: string
-  effort: 'low' | 'moderate' | 'high'
-  impact: 'low' | 'moderate' | 'high'
+  effort: Effort
+  impact: Impact
   preset: Preset | null
 }
 
 const emit = defineEmits<{
-  (e: 'start-preset', preset: Preset): void
-  (e: 'open-check-in'): void
+  (e: 'startPreset', preset: Preset): void
+  (e: 'openCheckIn'): void
+  (e: 'openExperiment'): void
 }>()
+
+const expFlow = useExperimentFlow()
 
 
 const loading = ref(false)
@@ -122,7 +152,17 @@ const error = ref('')
 const options = ref<NextFocusOption[]>([])
 const period = ref<{ start: string; end: string; checkins: number } | null>(null)
 
+const hasActiveExperiment = computed(() => !!expFlow.ctx.value.activeExperiment)
+
+const activeLabel = computed(() => {
+  const exp = expFlow.ctx.value.activeExperiment
+  if (!exp) return ''
+  const start = exp.start_date || ''
+  return `${exp.title}${start ? ` · started ${start}` : ''}`
+})
+
 const statusPill = computed(() => {
+  if (hasActiveExperiment.value) return 'Experiment active'
   if (loading.value) return 'Loading'
   if (error.value) return 'Error'
   if (!options.value.length) return 'Early'
@@ -141,11 +181,12 @@ function todayISO() {
 async function load() {
   loading.value = true
   error.value = ''
+
   try {
     const res = await $fetch('/api/next-focus', { query: { date: todayISO() } }) as any
     options.value = (res?.options || []) as NextFocusOption[]
     period.value = res?.period || null
-    console.log('Options', options.value)
+    console.log('options', options.value)
   } catch (e: any) {
     error.value = e?.data?.statusMessage || e?.message || 'Could not load next focus.'
     options.value = []
@@ -155,5 +196,13 @@ async function load() {
   }
 }
 
-onMounted(load)
+function onStartPreset(preset: Preset) {
+  if (hasActiveExperiment.value) return
+  emit('startPreset', preset)
+}
+
+onMounted(async () => {
+  load()
+})
+
 </script>

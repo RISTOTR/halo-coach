@@ -75,7 +75,6 @@ export default defineEventHandler(async (event) => {
 
   const uid = (user as any).id || (user as any).sub
   if (!uid) throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
-  console.log('next-focus uid', uid)
 
   const supabase = await serverSupabaseClient(event)
   const { date } = querySchema.parse(getQuery(event))
@@ -103,7 +102,6 @@ export default defineEventHandler(async (event) => {
     )
   )
   const checkins = checkinRows.length
-  console.log('metrics rows', metricsRows, 'checkins_numeric', checkins)
 
   // honest gating: require at least 3 *numeric* check-ins
   if (checkins < 3) {
@@ -201,9 +199,7 @@ export default defineEventHandler(async (event) => {
       score: 2
     })
   }
-  console.log('candidates', candidates)
-  // ✅ Fallback: if no candidates (metrics exist but not enough signal),
-  // return a gentle default so the card never looks broken.
+
   if (!candidates.length) {
     candidates.push({
       id: 'outdoor_reset',

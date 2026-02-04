@@ -195,81 +195,73 @@
 
 
     <NextFocusCard
-  @open-check-in="navigateTo('/check-in')"
-  @start-preset="startExperiment"
-/>
+      @openCheckIn="navigateTo('/check-in')"
+      @start-preset="startExperiment"
+      @openExperiment="openExperimentDialog"
+    />
 
-<Teleport to="body">
-  <div
-    v-if="replaceConfirmOpen"
-    class="fixed inset-0 z-50 flex items-center justify-center px-4 py-6"
-    @keydown.esc.prevent="replaceConfirmOpen = false"
-  >
-    <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" @click="replaceConfirmOpen = false" />
 
-    <div
-      class="relative w-full max-w-lg rounded-2xl border border-white/10 bg-slate-950/90 shadow-[0_30px_80px_rgba(0,0,0,0.65)]"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Replace experiment"
-    >
-      <div class="flex items-start justify-between gap-4 border-b border-white/10 px-5 py-4">
-        <div>
-          <div class="text-xs font-semibold uppercase tracking-[0.2em] text-white/55">
-            Experiment already active
+
+    <Teleport to="body">
+      <div v-if="replaceConfirmOpen" class="fixed inset-0 z-50 flex items-center justify-center px-4 py-6"
+        @keydown.esc.prevent="replaceConfirmOpen = false">
+        <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" @click="replaceConfirmOpen = false" />
+
+        <div
+          class="relative w-full max-w-lg rounded-2xl border border-white/10 bg-slate-950/90 shadow-[0_30px_80px_rgba(0,0,0,0.65)]"
+          role="dialog" aria-modal="true" aria-label="Replace experiment">
+          <div class="flex items-start justify-between gap-4 border-b border-white/10 px-5 py-4">
+            <div>
+              <div class="text-xs font-semibold uppercase tracking-[0.2em] text-white/55">
+                Experiment already active
+              </div>
+              <div class="mt-1 text-base font-semibold text-slate-100">
+                Replace it?
+              </div>
+            </div>
+
+            <button type="button"
+              class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-white/80 hover:bg-white/10"
+              @click="replaceConfirmOpen = false">
+              Close
+            </button>
           </div>
-          <div class="mt-1 text-base font-semibold text-slate-100">
-            Replace it?
+
+          <div class="px-5 py-4 space-y-3">
+            <p class="text-sm text-white/75">
+              Starting a new experiment will end the current one as <span
+                class="text-white/90 font-medium">abandoned</span>.
+            </p>
+
+            <div v-if="activeExpFrom409" class="rounded-xl border border-white/10 bg-black/10 p-3">
+              <div class="text-[11px] uppercase tracking-[0.18em] text-white/45 font-semibold">
+                Current experiment
+              </div>
+              <div class="mt-1 text-sm text-slate-100">
+                {{ activeExpFrom409.title || 'Untitled experiment' }}
+              </div>
+              <div class="mt-1 text-xs text-white/55">
+                Started {{ activeExpFrom409.start_date || '—' }}
+              </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-1">
+              <button type="button"
+                class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium text-white/80 hover:bg-white/10"
+                @click="replaceConfirmOpen = false">
+                Keep current
+              </button>
+
+              <button type="button"
+                class="rounded-xl border border-emerald-500/30 bg-emerald-500/15 px-4 py-2 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20"
+                @click="confirmReplace">
+                Replace & start
+              </button>
+            </div>
           </div>
-        </div>
-
-        <button
-          type="button"
-          class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-white/80 hover:bg-white/10"
-          @click="replaceConfirmOpen = false"
-        >
-          Close
-        </button>
-      </div>
-
-      <div class="px-5 py-4 space-y-3">
-        <p class="text-sm text-white/75">
-          Starting a new experiment will end the current one as <span class="text-white/90 font-medium">abandoned</span>.
-        </p>
-
-        <div v-if="activeExpFrom409" class="rounded-xl border border-white/10 bg-black/10 p-3">
-          <div class="text-[11px] uppercase tracking-[0.18em] text-white/45 font-semibold">
-            Current experiment
-          </div>
-          <div class="mt-1 text-sm text-slate-100">
-            {{ activeExpFrom409.title || 'Untitled experiment' }}
-          </div>
-          <div class="mt-1 text-xs text-white/55">
-            Started {{ activeExpFrom409.start_date || '—' }}
-          </div>
-        </div>
-
-        <div class="flex items-center justify-end gap-2 pt-1">
-          <button
-            type="button"
-            class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium text-white/80 hover:bg-white/10"
-            @click="replaceConfirmOpen = false"
-          >
-            Keep current
-          </button>
-
-          <button
-            type="button"
-            class="rounded-xl border border-emerald-500/30 bg-emerald-500/15 px-4 py-2 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20"
-            @click="confirmReplace"
-          >
-            Replace & start
-          </button>
         </div>
       </div>
-    </div>
-  </div>
-</Teleport>
+    </Teleport>
 
     <WeeklyGoalsCard />
     <WeeklyAiReportCard />
@@ -345,6 +337,11 @@ const trendStatus = computed(() => {
   if (trendDaysCount.value < 3) return 'Early'
   return 'Ready'
 })
+
+function openExperimentDialog() {
+  experimentDialogOpen.value = true
+  expFlow.openEndConfirm()
+}
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10)
@@ -517,6 +514,8 @@ async function loadAll() {
     loadTrends(id),
     loadAI(id),
     expFlow.loadActive()
+
+
   ])
 }
 

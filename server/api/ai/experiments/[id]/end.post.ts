@@ -7,6 +7,10 @@ const bodySchema = z.object({
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional()
 })
 
+function isUUID(v: string) {
+  return /^[0-9a-fA-F-]{36}$/.test(v)
+}
+
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)
   if (!user) throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
@@ -15,6 +19,8 @@ export default defineEventHandler(async (event) => {
   if (!uid) throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
 
   const id = String(event.context.params?.id || '')
+  if (!isUUID(id)) throw createError({ statusCode: 400, statusMessage: 'Invalid experiment id' })
+
   const supabase = await serverSupabaseClient(event)
 
   const { endDate } = bodySchema.parse(await readBody(event).catch(() => ({})))
@@ -52,6 +58,14 @@ export default defineEventHandler(async (event) => {
     .single()
 
   if (updErr) throw createError({ statusCode: 500, statusMessage: updErr.message })
+
+  // Optional: log event (best-effort)
+  await supabase.from('experiment_events').insert({
+    user_id: uid,
+    experiment_id: id,
+    type: 'ended',
+    payload: { end_date }
+  })
 
   return { success: true, alreadyEnded: false, experiment: updated }
 })

@@ -20,16 +20,18 @@
       </div>
     </section>
 
-    <div v-if="formError" class="mb-3 rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-xs text-red-200">
-  {{ formError }}
-</div>
+    <div
+      v-if="formError"
+      class="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-xs text-red-200"
+    >
+      {{ formError }}
+    </div>
 
-
-    <!-- MAIN GRID (dashboard-like) -->
+    <!-- MAIN GRID -->
     <section class="grid gap-6 lg:grid-cols-3">
-      <!-- LEFT (2/3): Metrics + Reflection + Habits -->
+      <!-- LEFT -->
       <div class="lg:col-span-2 space-y-6">
-        <!-- Core metrics card -->
+        <!-- Core metrics -->
         <div
           class="rounded-2xl border border-white/10 bg-slate-950/60 px-5 py-5 lg:px-6 lg:py-6 shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
           <div class="mb-3 flex items-start justify-between gap-3">
@@ -48,14 +50,22 @@
           <div class="grid grid-cols-2 gap-3 text-xs">
             <div>
               <label class="mb-1 block text-slate-300">Sleep (hours)</label>
-              <input v-model.number="sleepHours" type="number" step="0.5" min="0"
-                class="w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400/70" />
+              <input
+                v-model="sleepHoursRaw"
+                inputmode="decimal"
+                placeholder="e.g. 7.5"
+                class="w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400/70"
+              />
             </div>
 
             <div>
               <label class="mb-1 block text-slate-300">Movement / exercise (min)</label>
-              <input v-model.number="movementMinutes" type="number" min="0"
-                class="w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400/70" />
+              <input
+                v-model.number="movementMinutes"
+                type="number"
+                min="0"
+                class="w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400/70"
+              />
             </div>
           </div>
 
@@ -91,8 +101,12 @@
           <div class="mt-3 grid grid-cols-2 gap-3 text-xs">
             <div>
               <label class="mb-1 block text-slate-300">Water (L)</label>
-              <input v-model.number="waterLiters" type="number" step="0.1" min="0"
-                class="w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400/70" />
+              <input
+                v-model="waterLitersRaw"
+                inputmode="decimal"
+                placeholder="e.g. 1.5"
+                class="w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400/70"
+              />
             </div>
 
             <div>
@@ -105,9 +119,7 @@
           <div class="mt-4 space-y-2 text-xs">
             <div class="flex items-center justify-between">
               <label class="block text-slate-300">Evening reflection (optional)</label>
-              <span v-if="reflectionLoaded" class="text-[10px] text-slate-500">
-                loaded
-              </span>
+              <span v-if="reflectionLoaded" class="text-[10px] text-slate-500">loaded</span>
             </div>
 
             <textarea v-model="note" rows="4"
@@ -116,7 +128,7 @@
           </div>
         </div>
 
-        <!-- Habits card -->
+        <!-- Habits -->
         <div
           class="rounded-2xl border border-white/10 bg-slate-950/60 px-5 py-5 lg:px-6 lg:py-6 shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
           <div class="mb-3">
@@ -158,9 +170,9 @@
         </div>
       </div>
 
-      <!-- RIGHT (1/3): AI reflection + actions -->
+      <!-- RIGHT -->
       <div class="space-y-6">
-        <!-- Experiment card -->
+        <!-- Experiment -->
         <div class="rounded-2xl border border-white/10 bg-slate-950/60 px-5 py-4 shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
           <div class="flex items-start justify-between gap-3">
             <div>
@@ -170,11 +182,16 @@
               </p>
             </div>
 
-            <span v-if="expActive"
-              class="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-medium text-emerald-100">
+            <span
+              v-if="expActive"
+              class="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-medium text-emerald-100"
+            >
               Active
             </span>
-            <span v-else class="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] text-white/60">
+            <span
+              v-else
+              class="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] text-white/60"
+            >
               None
             </span>
           </div>
@@ -186,23 +203,25 @@
           <div v-else-if="expActive" class="mt-3 space-y-3">
             <div class="rounded-xl border border-white/10 bg-slate-900/60 px-3 py-2">
               <p class="text-xs font-medium text-slate-100 truncate">
-                {{ expFlow.ctx.activeExperiment.title }}
+                {{ expFlow.ctx.value.activeExperiment?.title }}
               </p>
               <p class="mt-0.5 text-[10px] text-slate-400">
-                Day {{ experimentDay }} · Target: {{ expFlow.ctx.activeExperiment.target_metric }}
+                Day {{ experimentDay }} · Target: {{ expFlow.ctx.value.activeExperiment?.target_metric }}
               </p>
             </div>
 
             <div class="flex items-center gap-2">
               <button
                 class="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-100 hover:bg-white/10"
-                @click="openExperimentDialog">
+                @click="openExperimentDialog"
+              >
                 View / end
               </button>
 
               <button
                 class="rounded-full border border-emerald-500/60 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20"
-                @click="openExperimentDialog">
+                @click="openExperimentDialog"
+              >
                 End & review
               </button>
             </div>
@@ -214,19 +233,18 @@
             </p>
             <button
               class="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-100 hover:bg-white/10"
-              @click="openExperimentStart">
+              @click="openExperimentStart"
+            >
               Start an experiment
             </button>
-
           </div>
         </div>
 
-        <!-- Experiment dialog -->
+        <!-- Experiment dialogs -->
         <ExperimentDialog v-model="experimentDialogOpen" :flow="expFlow" />
         <ExperimentStartDialog v-model="experimentStartOpen" :flow="expFlow" />
 
-
-        <!-- Actions card -->
+        <!-- Actions -->
         <div class="rounded-2xl border border-white/10 bg-slate-950/60 px-5 py-4 shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
           <div class="flex items-center justify-between gap-3">
             <div class="text-[11px] text-slate-400 min-h-[1.25rem]">
@@ -235,8 +253,10 @@
 
             <button
               class="rounded-full border border-emerald-500/60 bg-emerald-500/10 px-4 py-1.5 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20 disabled:opacity-50"
-              @click.prevent="handleSubmit" :disabled="saving || habitsLoading"
-              title="Save your check-in and refresh the AI reflection">
+              @click.prevent="handleSubmit"
+              :disabled="saving || habitsLoading"
+              title="Save your check-in and refresh the AI reflection"
+            >
               <span v-if="saving">Saving…</span>
               <span v-else>Save & refresh</span>
             </button>
@@ -247,28 +267,27 @@
           </p>
         </div>
 
-        <!-- AI card -->
+        <!-- AI -->
         <div class="rounded-2xl border border-white/10 bg-slate-950/60 px-5 py-5 shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
-          <div class="mb-2 flex items-start justify-between gap-3">
-            <div>
-              <h2 class="text-sm font-semibold text-slate-100">AI daily reflection</h2>
-              <p class="mt-1 text-[11px] text-slate-400">
-                Halo turns your check-in into a short, motivating reflection and 1–2 gentle ideas for tomorrow.
-              </p>
-            </div>
+          <div class="mb-2">
+            <h2 class="text-sm font-semibold text-slate-100">AI daily reflection</h2>
+            <p class="mt-1 text-[11px] text-slate-400">
+              Halo turns your check-in into a short reflection and 1–2 gentle ideas for tomorrow.
+            </p>
           </div>
 
           <div v-if="loadingAi" class="mt-3 text-[11px] text-slate-300">
             Writing your reflection…
           </div>
 
-          <div v-else-if="aiContent" class="mt-3 prose prose-invert max-w-none text-[11px] leading-relaxed
-         prose-strong:text-slate-100 prose-strong:font-semibold
-         prose-em:text-slate-200">
+          <div
+            v-else-if="aiContent"
+            class="mt-3 prose prose-invert max-w-none text-[11px] leading-relaxed
+              prose-strong:text-slate-100 prose-strong:font-semibold
+              prose-em:text-slate-200"
+          >
             <div v-html="renderedAiContent" />
           </div>
-
-
 
           <div v-else class="mt-3 text-[11px] text-slate-500">
             No reflection yet for today. Save your check-in to generate one.
@@ -283,24 +302,16 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { marked } from 'marked'
 import ExperimentDialog from '~/components/ExperimentDialog.vue'
-import { useExperimentFlow } from '~/composables/useExperimentFlow'
 import ExperimentStartDialog from '~/components/ExperimentStartDialog.vue'
-
-type Preset = {
-  title: string
-  leverType: 'metric' | 'habit' | 'custom'
-  leverRef?: string
-  targetMetric: 'energy' | 'stress' | 'mood' | 'sleep_hours' | 'steps' | 'water_liters' | 'outdoor_minutes'
-  effortEstimate?: 'low' | 'moderate' | 'high'
-  expectedImpact?: 'low' | 'moderate' | 'high'
-  recommendedDays?: number
-  baselineDays?: number
-}
-
+import { useExperimentFlow } from '~/composables/useExperimentFlow'
 
 const supabase = useSupabaseClient()
 const userRef = useSupabaseUser()
-
+const uid = computed(() => {
+  const u: any = userRef.value
+  return u?.id || u?.sub || null
+})
+console.log(uid.value)
 const today = new Date().toISOString().slice(0, 10)
 const date = ref(today)
 
@@ -309,20 +320,20 @@ const formattedToday = computed(() => {
   return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })
 })
 
-// Core metrics
-const sleepHours = ref<number | null>(null)
+/* Core metrics */
+const sleepHoursRaw = ref<string>('')       // allow "7,5"
 const movementMinutes = ref<number | null>(null)
 const mood = ref<number | null>(null)
 const energy = ref<number | null>(null)
 const stress = ref<number | null>(null)
-const waterLiters = ref<number | null>(null)
+const waterLitersRaw = ref<string>('')      // allow "1,5"
 const outdoorMinutes = ref<number | null>(null)
 
-// Reflection
+/* Reflection */
 const note = ref('')
 const reflectionLoaded = ref(false)
 
-// Habits
+/* Habits */
 const habits = ref<any[]>([])
 const habitsLoading = ref(true)
 const selectedHabitIds = ref<string[]>([])
@@ -340,186 +351,57 @@ const habitsSummary = computed(() => {
   return completed.map((h) => `- ${h.name} (${h.frequency})`).join('\n')
 })
 
-const renderedAiContent = computed(() => (aiContent.value ? marked.parse(aiContent.value) : ''))
-
-// AI
+/* AI */
 const aiContent = ref('')
 const loadingAi = ref(false)
+const renderedAiContent = computed(() => (aiContent.value ? marked.parse(aiContent.value) : ''))
 
-// UI state
+/* UI */
 const saving = ref(false)
 const statusMessage = ref('')
+const formError = ref('')
 
-// Experiments
+/* Experiments (singleton) */
 const expFlow = useExperimentFlow()
 const experimentDialogOpen = ref(false)
-
-const expLoading = computed(() => expFlow.state.value === 'loading_active')
-const expActive = computed(() => expFlow.ctx.activeExperiment?.status === 'active')
-
 const experimentStartOpen = ref(false)
 
-function openExperimentStart() {
-  experimentStartOpen.value = true
-}
-
+const expLoading = computed(() => expFlow.state.value === 'loading_active')
+const expActive = computed(() => expFlow.ctx.value.activeExperiment?.status === 'active')
 
 const experimentDay = computed(() => {
-  const exp = expFlow.ctx.activeExperiment
+  const exp = expFlow.ctx.value.activeExperiment
   if (!exp?.start_date) return 0
   const start = new Date(`${exp.start_date}T00:00:00Z`)
   const now = new Date(`${today}T00:00:00Z`)
-  const diffDays = Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
+  const diffDays = Math.floor((now.getTime() - start.getTime()) / 86400000)
   return Math.max(1, diffDays + 1)
 })
 
 function openExperimentDialog() {
   experimentDialogOpen.value = true
-  // If you want the dialog to always begin at confirm_end step:
   expFlow.openEndConfirm()
 }
 
-const replaceConfirmOpen = ref(false)
-const pendingPreset = ref<Preset | null>(null)
-const activeExpFrom409 = ref<any | null>(null)
-
-async function startExperiment(preset: Preset, replaceActive = false) {
-  try {
-    await $fetch('/api/ai/experiments/start', {
-      method: 'POST',
-      body: {
-        title: preset.title,
-        leverType: preset.leverType,
-        leverRef: preset.leverRef,
-        targetMetric: preset.targetMetric,
-        effortEstimate: preset.effortEstimate,
-        expectedImpact: preset.expectedImpact,
-        recommendedDays: preset.recommendedDays ?? 7,
-        baselineDays: preset.baselineDays ?? 30,
-        replaceActive
-      }
-    })
-
-    await expFlow.loadActive()
-  } catch (e: any) {
-    const status = e?.status || e?.data?.statusCode
-    if (status === 409) {
-      // Your API returns data.activeExperiment
-      activeExpFrom409.value = e?.data?.data?.activeExperiment || null
-      pendingPreset.value = preset
-      replaceConfirmOpen.value = true
-      return
-    }
-    console.error(e?.data?.statusMessage || e?.message || 'Failed to start experiment')
-  }
+function openExperimentStart() {
+  experimentStartOpen.value = true
 }
 
-// call this when user confirms "Replace"
-async function confirmReplaceActive() {
-  if (!pendingPreset.value) return
-  replaceConfirmOpen.value = false
-  await startExperiment(pendingPreset.value, true)
-  pendingPreset.value = null
-  activeExpFrom409.value = null
-}
-
-
-
+/* Auth redirect 
 watch(
-  userRef,
+  uid.value,
   (u) => {
     if (!u) navigateTo('/auth')
   },
   { immediate: true }
-)
+)*/
 
+/* Helpers */
 function normalizeAiResponse(res: any): string {
-  // Support both shapes: { content } or { summary }
   return (res?.content ?? res?.summary ?? '') as string
 }
 
-async function loadHabitsForToday() {
-  habitsLoading.value = true
-  try {
-    const { data: userData } = await supabase.auth.getUser()
-    const currentUser = userData.user
-    if (!currentUser) {
-      habits.value = []
-      selectedHabitIds.value = []
-      return
-    }
-
-    const data = await $fetch('/api/habits/today', {
-      query: { date: date.value }
-    })
-
-    habits.value = (data as any[]) || []
-    selectedHabitIds.value = habits.value.filter((h) => h.completed_today).map((h) => h.id)
-  } finally {
-    habitsLoading.value = false
-  }
-}
-
-async function loadTodayCheckin() {
-  const { data: userData } = await supabase.auth.getUser()
-  const currentUser = userData.user
-  if (!currentUser) return
-
-  // 1) Daily metrics
-  const { data: metrics, error: metricsErr } = await supabase
-    .from('daily_metrics')
-    .select('*')
-    .eq('user_id', currentUser.id)
-    .eq('date', today)
-    .maybeSingle()
-
-  if (metricsErr) console.error(metricsErr)
-
-  if (metrics) {
-    sleepHours.value = metrics.sleep_hours
-    movementMinutes.value = metrics.steps // keeping your DB column name "steps"
-    mood.value = metrics.mood
-    energy.value = metrics.energy
-    stress.value = metrics.stress
-    waterLiters.value = metrics.water_liters
-    outdoorMinutes.value = metrics.outdoor_minutes
-  }
-
-  // 2) Reflection (latest single row guaranteed by unique constraint)
-  const { data: reflection, error: reflectionErr } = await supabase
-    .from('journal_entries')
-    .select('content')
-    .eq('user_id', currentUser.id)
-    .eq('date', today)
-    .eq('type', 'evening')
-    .maybeSingle()
-
-  if (reflectionErr) console.error(reflectionErr)
-
-  if (reflection?.content) {
-    note.value = reflection.content
-    reflectionLoaded.value = true
-  }
-
-  // 3) AI report
-  const { data: report, error: reportErr } = await supabase
-    .from('ai_reports')
-    .select('content')
-    .eq('user_id', currentUser.id)
-    .eq('date', today)
-    .eq('period', 'daily')
-    .maybeSingle()
-
-  if (reportErr) console.error(reportErr)
-
-  if (report?.content) {
-    aiContent.value = report.content
-  }
-}
-
-const formError = ref('')
-
-function parseNumber(input: any) {
+function parseDecimal(input: any) {
   if (input == null) return null
   const s = String(input).trim().replace(',', '.')
   if (!s) return null
@@ -527,37 +409,116 @@ function parseNumber(input: any) {
   return Number.isFinite(n) ? n : null
 }
 
+/* Loaders */
+async function loadHabitsForToday() {
+  habitsLoading.value = true
+  try {
+    const currentUser = uid.value
+    if (!currentUser) {
+      habits.value = []
+      selectedHabitIds.value = []
+      return
+    }
+
+    const data = await $fetch('/api/habits/today', { query: { date: date.value } })
+    habits.value = (data as any[]) || []
+    selectedHabitIds.value = habits.value.filter((h) => h.completed_today).map((h) => h.id)
+  } catch (e: any) {
+    // keep silent but don’t break page
+    habits.value = []
+    selectedHabitIds.value = []
+  } finally {
+    habitsLoading.value = false
+  }
+}
+
+async function loadTodayCheckin() {
+  const currentUser = uid.value
+  if (!currentUser) return
+
+  const { data: metrics, error: metricsErr } = await supabase
+    .from('daily_metrics')
+    .select('*')
+    .eq('user_id', currentUser)
+    .eq('date', today)
+    .maybeSingle()
+
+  if (metricsErr) console.error(metricsErr)
+
+  if (metrics) {
+    sleepHoursRaw.value = metrics.sleep_hours != null ? String(metrics.sleep_hours) : ''
+    movementMinutes.value = metrics.steps ?? null
+    mood.value = metrics.mood ?? null
+    energy.value = metrics.energy ?? null
+    stress.value = metrics.stress ?? null
+    waterLitersRaw.value = metrics.water_liters != null ? String(metrics.water_liters) : ''
+    outdoorMinutes.value = metrics.outdoor_minutes ?? null
+  }
+
+  const { data: reflection, error: reflectionErr } = await supabase
+    .from('journal_entries')
+    .select('content')
+    .eq('user_id', currentUser)
+    .eq('date', today)
+    .eq('type', 'evening')
+    .maybeSingle()
+
+  if (reflectionErr) console.error(reflectionErr)
+  if (reflection?.content) {
+    note.value = reflection.content
+    reflectionLoaded.value = true
+  }
+
+  const { data: report, error: reportErr } = await supabase
+    .from('ai_reports')
+    .select('content')
+    .eq('user_id', currentUser)
+    .eq('date', today)
+    .eq('period', 'daily')
+    .maybeSingle()
+
+  if (reportErr) console.error(reportErr)
+  if (report?.content) aiContent.value = report.content
+}
+
+/* Submit */
 const handleSubmit = async () => {
+  formError.value = ''
   statusMessage.value = ''
   saving.value = true
   loadingAi.value = false
 
   try {
-    const { data: userData } = await supabase.auth.getUser()
-    const currentUser = userData.user
+    const currentUser = uid.value
     if (!currentUser) {
       statusMessage.value = 'You need to be logged in to save your check-in.'
       return
     }
 
-    // 1) upsert daily_metrics
+    const sleep_hours = parseDecimal(sleepHoursRaw.value)
+    const water_liters = parseDecimal(waterLitersRaw.value)
+
+    if (sleepHoursRaw.value.trim() && sleep_hours == null) {
+      formError.value = 'Sleep hours must be a number (e.g. 7.5 or 7,5).'
+      return
+    }
+    if (waterLitersRaw.value.trim() && water_liters == null) {
+      formError.value = 'Water must be a number (e.g. 1.5 or 1,5).'
+      return
+    }
+
     const payload = {
-      user_id: currentUser.id,
+      user_id: currentUser,
       date: today,
-      sleep_hours: parseNumber(sleepHours.value),
-      steps: parseNumber(movementMinutes.value), // DB col is still "steps"
+      sleep_hours,
+      steps: movementMinutes.value ?? null, // DB col is still "steps"
       mood: mood.value,
       energy: energy.value,
       stress: stress.value,
-      water_liters: parseNumber(waterLiters.value),
-      outdoor_minutes: parseNumber(outdoorMinutes.value),
+      water_liters,
+      outdoor_minutes: outdoorMinutes.value ?? null,
       habits_summary: habitsSummary.value,
       habits_status: habitsStatus.value
-    }
-
-    if (sleepHours.value && payload.sleep_hours == null) {
-      formError.value = 'Sleep hours must be a number (e.g. 7.5).'
-      return
     }
 
     const { error: metricsError } = await supabase
@@ -565,40 +526,33 @@ const handleSubmit = async () => {
       .upsert(payload, { onConflict: 'user_id,date' })
 
     if (metricsError) {
-      console.error(metricsError)
-      statusMessage.value = 'Failed to save daily metrics.'
+      formError.value = metricsError.message || 'Failed to save daily metrics.'
       return
     }
 
-    // 2) upsert reflection (only if non-empty)
     const reflectionText = note.value.trim()
-
     if (reflectionText) {
-      await supabase.from('journal_entries').upsert(
-        { user_id: currentUser.id, date: today, type: 'evening', content: reflectionText },
-        { onConflict: 'user_id,date,type' }
-      )
+      const { error: jErr } = await supabase
+        .from('journal_entries')
+        .upsert(
+          { user_id: currentUser, date: today, type: 'evening', content: reflectionText },
+          { onConflict: 'user_id,date,type' }
+        )
+      if (jErr) console.error(jErr)
     } else {
-      // user cleared reflection -> delete
       await supabase
         .from('journal_entries')
         .delete()
-        .eq('user_id', currentUser.id)
+        .eq('user_id', currentUser)
         .eq('date', today)
         .eq('type', 'evening')
     }
 
-
-    // 3) habits logs
     await $fetch('/api/habits/log-today', {
       method: 'POST',
-      body: {
-        date: date.value,
-        completedHabitIds: selectedHabitIds.value
-      }
+      body: { date: date.value, completedHabitIds: selectedHabitIds.value }
     })
 
-    // 4) generate AI
     statusMessage.value = 'Saved. Writing your reflection…'
     loadingAi.value = true
 
@@ -606,12 +560,13 @@ const handleSubmit = async () => {
       method: 'POST',
       body: { date: today }
     })
+
     aiContent.value = normalizeAiResponse(aiRes)
     statusMessage.value = 'Reflection updated.'
-    await expFlow.loadActive()
 
+    // refresh experiment singleton state (in case you ended/started elsewhere)
+    await expFlow.loadActive()
   } catch (e: any) {
-    // Nuxt $fetch errors typically have e.data.statusMessage
     formError.value =
       e?.data?.statusMessage ||
       e?.data?.message ||
@@ -627,5 +582,4 @@ onMounted(async () => {
   await Promise.all([loadHabitsForToday(), loadTodayCheckin()])
   await expFlow.loadActive()
 })
-
 </script>

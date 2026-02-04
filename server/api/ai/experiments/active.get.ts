@@ -15,12 +15,10 @@ const { data, error } = await supabase
   .select('*')
   .eq('user_id', uid)
   .eq('status', 'active')
-  .is('end_date', null)          // <<< IMPORTANT
-  .order('start_date', { ascending: false })
+  .order('updated_at', { ascending: false })
+  .order('created_at', { ascending: false })
   .limit(1)
   .maybeSingle()
-
-
   if (error) throw createError({ statusCode: 500, statusMessage: error.message })
 
   return { success: true, experiment: data || null }
