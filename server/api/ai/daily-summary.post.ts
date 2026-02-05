@@ -327,6 +327,8 @@ ${habitsList}
           .join('\n')
       : 'No weekly goals set.'
 
+      const styleSeed = Number(normalizedDate.slice(-2)) % 3
+
   const prompt = `
 You are Halo, a calm, encouraging health coach.
 Your job is to give the user a short, human, motivating reflection of their day and 1–2 gentle focus points for tomorrow.
@@ -358,6 +360,7 @@ Guidelines:
 - Write in a warm, grounded tone. Imagine you talk to a thoughtful adult, not a child.
 - Start with 1–2 positive highlights from today (effort, coping, recovery, a habit, or something in the reflection).
 - If the journal entry mentions emotions, struggles or wins, acknowledge them briefly and kindly.
+- Write with a slightly different phrasing than yesterday. Avoid reusing the same opening sentence patterns.
 
 GOALS INTEGRATION (important):
 - Weekly goals are context, not a checklist.
@@ -378,6 +381,10 @@ FORMATTING (Markdown):
 - Keep it under 180 words.
 - 2–3 short paragraphs. No bullet points.
 - Avoid generic phrases like "great foundation" or "wonderful for body and mind". Be specific.
+
+- If seed 0: “start with a gentle observation”
+- If seed 1: “start with a small win”
+- If seed 2: “start with an emotional acknowledgment”
 `.trim()
 
   const response = await client.responses.create({

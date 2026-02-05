@@ -193,6 +193,11 @@
       </div>
     </section>
 
+    <ExperimentInProgressCard
+      :exp="expFlow.ctx.value.activeExperiment"
+      :ending="endingExperiment"
+      @endReview="handleEndAndReview"
+    />
 
     <NextFocusCard
       :active-experiment="expFlow.ctx.value.activeExperiment"
@@ -276,6 +281,7 @@ import DailyInsightCard from '~/components/dashboard/DailyInsightCard.vue'
 import WeeklyAiReportCard from '~/components/dashboard/WeeklyAiReportCard.vue'
 import WeeklyGoalsCard from '~/components/dashboard/WeeklyGoalsCard.vue'
 import NextFocusCard from '~/components/dashboard/NextFocusCard.vue'
+import ExperimentInProgressCard from '~/components/experiments/ExperimentInProgressCard.vue'
 
 
 type MetricPoint = { time: number; value: number }
@@ -304,7 +310,8 @@ const habitsLoading = ref(true)
 const toggling = ref<Record<string, boolean>>({})
 const habitError = ref('')
 
-
+// Experiments
+const endingExperiment = ref(false)
 
 // Weekly trends
 const sleepSeries = ref<MetricPoint[]>([])
@@ -342,6 +349,44 @@ function openExperimentDialog() {
   experimentDialogOpen.value = true
   expFlow.openEndConfirm()
 }
+
+async function handleEndAndReview(experimentId: string) {
+  if (!experimentId || endingExperiment.value) return
+  endingExperiment.value = true
+
+  try {
+    await $fetch(`/api/ai/experiments/${experimentId}/end`, {
+      method: 'POST',
+      body: { endDate: todayISO() }
+    })
+
+    const review = await $fetch(`/api/ai/experiments/${experimentId}/review`)
+
+    // ✅ choose one pattern (depends on your flow)
+    // Option A: you already have a dialog controlled by expFlow:
+    // expFlow.openReview(review)
+
+    // Option B: minimal: store review in flow ctx and open a dialog
+    // expFlow.ctx.value.review = review
+    // expFlow.openEndConfirm()
+
+    // For now, do a safe fallback:
+    if (typeof (expFlow as any).openReview === 'function') {
+      ;(expFlow as any).openReview(review)
+    } else {
+      // at least open the existing dialog step
+      ;(expFlow as any).openEndConfirm?.()
+      ;(expFlow as any).ctx.value.review = review
+    }
+
+    await expFlow.loadActive()
+  } catch (e: any) {
+    console.error(e?.data?.statusMessage || e?.message || 'Failed to end experiment')
+  } finally {
+    endingExperiment.value = false
+  }
+}
+
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10)
