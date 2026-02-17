@@ -16,45 +16,45 @@
 
         <div class="px-5 py-4">
           <!-- CONFIRM END -->
-          <div v-if="flow.state.value === 'confirm_end'" class="space-y-3">
+          <div
+  v-if="flow.state.value === 'confirm_end' || (flow.state.value === 'ready' && flow.ctx.activeExperiment)"
+  class="space-y-3"
+>
+
             <p class="text-[12px] text-slate-300">
-              End this experiment and review it?
+              End & review
             </p>
 
             <div class="grid grid-cols-2 gap-3">
               <div>
                 <label class="mb-1 block text-[11px] text-slate-400">End date</label>
-                <input
-                  v-model="flow.ctx.endDate"
-                  type="date"
-                  class="w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-1.5 text-xs text-slate-100"
-                />
+                <input v-model="flow.ctx.endDate" type="date"
+                  class="w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-1.5 text-xs text-slate-100" />
               </div>
             </div>
 
             <div class="flex items-center justify-end gap-2 pt-2">
               <button
                 class="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-100 hover:bg-white/10"
-                @click="close"
-              >
+                @click="close">
                 Cancel
               </button>
               <button
                 class="rounded-full border border-emerald-500/60 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20"
-                @click="flow.endExperiment"
-              >
-                End & continue
+                @click="flow.endExperiment">
+                End & Review
               </button>
             </div>
           </div>
 
           <!-- WORKING -->
-          <div v-else-if="flow.state.value === 'ending' || flow.state.value === 'submitting_review'" class="text-[12px] text-slate-300">
+          <div v-else-if="flow.state.value === 'ending' || flow.state.value === 'submitting_review'"
+            class="text-[12px] text-slate-300">
             Working…
           </div>
 
           <!-- SUBJECTIVE -->
-          <div v-else-if="flow.state.value === 'subjective'" class="space-y-3">
+          <!-- <div v-else-if="flow.state.value === 'subjective'" class="space-y-3">
             <p class="text-[12px] text-slate-300">
               Before we look at the data — how did it feel?
             </p>
@@ -100,10 +100,10 @@
                 Review
               </button>
             </div>
-          </div>
+          </div> -->
 
           <!-- INSUFFICIENT -->
-          <div v-else-if="flow.state.value === 'insufficient'" class="space-y-3">
+          <!-- <div v-else-if="flow.state.value === 'insufficient'" class="space-y-3">
             <p class="text-[12px] text-slate-300">Not enough data yet.</p>
             <p class="text-[11px] text-slate-400">
               We don’t have enough logged days to evaluate reliably. Continue a few more days and try again.
@@ -127,38 +127,75 @@
                 Continue experiment
               </button>
             </div>
-          </div>
+          </div> -->
 
-          <!-- REVIEW -->
+          <!-- REVIEW (Phase 3 DTO) -->
           <div v-else-if="flow.state.value === 'review'" class="space-y-4">
             <div class="text-[12px] text-slate-300">
-              Here’s how the system shifted.
+              Here’s what changed (baseline → experiment).
             </div>
 
-            <div v-if="flow.ctx.computed?.metrics" class="grid gap-3">
-              <MetricBlock label="Energy" :m="flow.ctx.computed.metrics.energy" />
-              <MetricBlock label="Stress" :m="flow.ctx.computed.metrics.stress" />
-              <MetricBlock label="Mood" :m="flow.ctx.computed.metrics.mood" />
-              <div class="text-[11px] text-slate-400">
-                Confidence: {{ flow.ctx.computed.confidence }}
+            <div v-if="flow.ctx.reviewDto" class="space-y-3">
+              <!-- Outcome pill -->
+              <div class="rounded-xl border border-white/10 bg-black/10 px-3 py-2 text-[11px] text-white/70">
+                <span class="font-semibold text-white/80">
+                  {{ flow.ctx.reviewDto.outcome.summaryPill.text }}
+                </span>
               </div>
+
+              <!-- Target metric -->
+              <div class="rounded-xl border border-white/10 bg-slate-900/60 px-3 py-2">
+                <div class="flex items-center justify-between">
+                  <div class="text-xs font-medium text-slate-100">
+                    {{ flow.ctx.reviewDto.metrics.target.label }} (target)
+                  </div>
+                  <div class="text-[10px] text-slate-300">
+                    {{ flow.ctx.reviewDto.metrics.target.deltaText }}
+                  </div>
+                </div>
+                <div class="mt-1 text-[11px] text-slate-300">
+                  Baseline {{ flow.ctx.reviewDto.metrics.target.baselineAvg ?? '—' }}
+                  → Experiment {{ flow.ctx.reviewDto.metrics.target.experimentAvg ?? '—' }}
+                </div>
+                <div v-if="flow.ctx.reviewDto.metrics.target.isSignal === false" class="mt-1 text-[10px] text-white/45">
+                  Not enough logged days to evaluate reliably yet.
+                </div>
+              </div>
+
+              <!-- Other metrics -->
+              <div class="grid gap-2">
+                <div v-for="m in flow.ctx.reviewDto.metrics.others" :key="m.key"
+                  class="rounded-xl border border-white/10 bg-slate-900/50 px-3 py-2">
+                  <div class="flex items-center justify-between">
+                    <div class="text-xs font-medium text-slate-100">{{ m.label }}</div>
+                    <div class="text-[10px] text-slate-300">{{ m.deltaText }}</div>
+                  </div>
+                  <div class="mt-1 text-[11px] text-slate-300">
+                    Baseline {{ m.baselineAvg ?? '—' }} → Experiment {{ m.experimentAvg ?? '—' }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div v-else class="text-[12px] text-slate-300">
+              No review data available.
             </div>
 
             <div class="flex items-center justify-end gap-2 pt-1">
               <button
                 class="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-100 hover:bg-white/10"
-                @click="close"
-              >
+                @click="close">
                 Close
               </button>
+
               <button
                 class="rounded-full border border-emerald-500/60 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20"
-                @click="flow.goNextFocus"
-              >
+                @click="flow.goNextFocus">
                 What next?
               </button>
             </div>
           </div>
+
 
           <!-- NEXT FOCUS -->
           <div v-else-if="flow.state.value === 'next_focus'" class="space-y-3">
@@ -168,8 +205,7 @@
             <div class="flex items-center justify-end gap-2 pt-2">
               <button
                 class="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-100 hover:bg-white/10"
-                @click="close"
-              >
+                @click="close">
                 Close
               </button>
             </div>
@@ -182,8 +218,7 @@
             <div class="flex items-center justify-end pt-2">
               <button
                 class="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-100 hover:bg-white/10"
-                @click="close"
-              >
+                @click="close">
                 Close
               </button>
             </div>
@@ -202,7 +237,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-type SubjectiveRating = 'more_stable'|'slightly_better'|'no_change'|'hard_to_maintain'|'worse'
+type SubjectiveRating = 'more_stable' | 'slightly_better' | 'no_change' | 'hard_to_maintain' | 'worse'
 
 const props = defineProps<{
   modelValue: boolean
@@ -219,12 +254,24 @@ const options: { value: SubjectiveRating; label: string }[] = [
   { value: 'worse', label: 'Worse' }
 ]
 
-const title = computed(() => props.flow?.ctx?.activeExperiment?.title || 'Experiment')
+const title = computed(() => {
+  const ctx = props.flow?.ctx?.value
+  const exp =
+    ctx?.reviewDto ||
+    ctx?.reviewExperiment ||
+    ctx?.activeExperiment
+
+  if (!exp) return 'Experiment'
+  return exp.title || `${exp.leverLabel} → ${exp.targetLabel}` || 'Experiment'
+})
+
+
 
 function close() {
   emit('update:modelValue', false)
-  props.flow.close()
+  props.flow.dismiss() // ✅ instead of flow.close()
 }
+
 
 // Local component (no TSX)
 const MetricBlock = defineComponent({

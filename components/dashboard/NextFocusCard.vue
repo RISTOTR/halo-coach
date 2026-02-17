@@ -155,11 +155,13 @@ const emit = defineEmits<{
 }>()
 
 const hasActiveExperiment = computed(() => !!props.activeExperiment)
-console.log('hasActiveExperiment', props.activeExperiment)
+
 const activeLabel = computed(() => {
   const exp = props.activeExperiment
   if (!exp) return ''
-  return `${exp.title}${exp.start_date ? ` · started ${exp.start_date}` : ''}`
+  const title = exp.title || `${exp.leverLabel} → ${exp.targetLabel}`
+  const started = exp.startDate ? ` · started ${exp.startDate}` : ''
+  return `${title}${started}`
 })
 
 
@@ -196,7 +198,6 @@ async function load() {
     const res = await $fetch('/api/next-focus', { query: { date: todayISO() } }) as any
     options.value = (res?.options || []) as NextFocusOption[]
     period.value = res?.period || null
-    console.log('options', options.value)
   } catch (e: any) {
     error.value = e?.data?.statusMessage || e?.message || 'Could not load next focus.'
     options.value = []

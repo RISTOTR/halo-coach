@@ -46,6 +46,7 @@ type FlowCtx = {
   computed: any | null
   review: any | null
   insufficient: any | null
+  reviewDto: any | null
   error: { message: string } | null
 }
 
@@ -66,22 +67,26 @@ export function useExperimentFlow() {
     computed: null,
     review: null,
     insufficient: null,
+    reviewDto: null,
     error: null
   }))
 
   // Prevent “double load” races (two components calling loadActive at same time)
   const loadSeq = useState<number>('exp:loadSeq', () => 0)
 
-  function resetTransient() {
-    ctx.value.subjectiveRating = null
-    ctx.value.subjectiveNote = ''
-    ctx.value.computed = null
-    ctx.value.review = null
-    ctx.value.insufficient = null
-    ctx.value.error = null
-    ctx.value.endDate = todayISO()
-    // NOTE: do NOT wipe reviewExperiment here; it’s needed during subjective/review.
-  }
+  function resetTransient(keepEndDate = true) {
+  const prevEnd = ctx.value.endDate
+  ctx.value.subjectiveRating = null
+  ctx.value.subjectiveNote = ''
+  ctx.value.computed = null
+  ctx.value.review = null
+  ctx.value.reviewDto = null
+  ctx.value.insufficient = null
+  ctx.value.error = null
+  if (!keepEndDate) ctx.value.endDate = todayISO()
+  else ctx.value.endDate = prevEnd || todayISO()
+}
+
 
   async function loadActive() {
     const seq = ++loadSeq.value
@@ -110,79 +115,55 @@ export function useExperimentFlow() {
     state.value = 'confirm_end'
   }
 
-  async function endExperiment() {
-    // We end the currently active experiment, but keep it in reviewExperiment for the next step.
-    const exp = ctx.value.reviewExperiment || ctx.value.activeExperiment
-    if (!exp?.id) return
+ async function endExperiment() {
+  const exp = ctx.value.reviewExperiment || ctx.value.activeExperiment
+  if (!exp?.id) return
 
-    state.value = 'ending'
-    resetTransient()
+  const endDate = ctx.value.endDate || todayISO()
 
-    try {
-      const id = exp.id
-      const res = await $fetch(`/api/ai/experiments/${id}/end`, {
-        method: 'POST',
-        body: { endDate: ctx.value.endDate }
-      }) as any
+  state.value = 'ending'
+  resetTransient(true)     // <-- keep endDate
+  ctx.value.endDate = endDate
 
-      // endpoint should return updated experiment (with end_date set)
-      ctx.value.reviewExperiment = res?.experiment ?? exp
+  try {
+    const id = exp.id
+    await $fetch(`/api/ai/experiments/${id}/end`, {
+      method: 'POST',
+      body: { endDate }
+    })
 
-      // active is now gone (by definition)
-      ctx.value.activeExperiment = null
+    const reviewDto = await $fetch(`/api/ai/experiments/${id}/review`, { method: 'GET' }) as any
+    ctx.value.reviewDto = reviewDto
 
-      // go straight to subjective
-      state.value = 'subjective'
-    } catch (e: any) {
-      const status = e?.status || e?.data?.statusCode
-
-      // If already ended, still proceed to subjective using the experiment we had
-      if (status === 409) {
-        ctx.value.activeExperiment = null
-        state.value = 'subjective'
-        return
-      }
-
-      ctx.value.error = { message: e?.data?.statusMessage || e?.message || 'Failed to end experiment' }
-      state.value = 'error'
-    }
+    ctx.value.activeExperiment = null
+    ctx.value.reviewExperiment = null
+    state.value = 'review'
+  } catch (e: any) {
+    ctx.value.error = { message: e?.data?.statusMessage || e?.message || 'Failed to end experiment' }
+    state.value = 'error'
   }
+}
 
-  async function submitSubjective() {
-    const exp = ctx.value.reviewExperiment
-    if (!exp?.id) return
-    if (!ctx.value.subjectiveRating) return
+  async function finalizeReview(payload: { whatWorked?: string[]; tryNext?: string[] }) {
+  const review = ctx.value.reviewDto
+  if (!review?.id) return
 
-    state.value = 'submitting_review'
-    try {
-      const id = exp.id
-      const res = await $fetch(`/api/ai/experiments/${id}/review`, {
-        method: 'POST',
-        body: {
-          subjectiveRating: ctx.value.subjectiveRating,
-          subjectiveNote: ctx.value.subjectiveNote || undefined
-        }
-      }) as any
+  state.value = 'submitting_review'
+  try {
+    await $fetch(`/api/ai/experiments/${review.id}/review`, {
+      method: 'POST',
+      body: { ...payload, finalize: true }
+    })
 
-      if (!res?.ok) {
-        ctx.value.insufficient = res
-        state.value = 'insufficient'
-        return
-      }
-
-      ctx.value.computed = res.computed
-      ctx.value.review = res.review
-
-      // Now the review is complete → clear reviewExperiment and refresh active (should be null)
-      ctx.value.reviewExperiment = null
-      await loadActive()
-
-      state.value = 'next_focus'
-    } catch (e: any) {
-      ctx.value.error = { message: e?.data?.statusMessage || e?.message || 'Failed to submit review' }
-      state.value = 'error'
-    }
+    // refresh active (should be null)
+    await loadActive()
+    state.value = 'next_focus'
+  } catch (e: any) {
+    ctx.value.error = { message: e?.data?.statusMessage || e?.message || 'Failed to finalize review' }
+    state.value = 'error'
   }
+}
+
 
   async function continueExperiment() {
     // Continue only makes sense for an ACTIVE experiment
@@ -253,16 +234,27 @@ export function useExperimentFlow() {
     resetTransient()
   }
 
+  function dismiss() {
+  // close the dialog, but keep the active experiment loaded
+  state.value = 'ready'
+  ctx.value.reviewExperiment = null
+  ctx.value.reviewDto = null
+  ctx.value.error = null
+  // keep ctx.value.activeExperiment as-is
+}
+
+
   return {
     state,
     ctx,
     loadActive,
     openEndConfirm,
     endExperiment,
-    submitSubjective,
+    finalizeReview,
     continueExperiment,
     startFromPreset,
     goNextFocus,
-    close
+    close,
+    dismiss
   }
 }

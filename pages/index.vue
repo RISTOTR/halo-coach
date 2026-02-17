@@ -194,16 +194,18 @@
     </section>
 
     <ExperimentInProgressCard
-      :exp="expFlow.ctx.value.activeExperiment"
-      :ending="endingExperiment"
-      @endReview="handleEndAndReview"
-    />
+  :exp="expFlow.ctx.value.activeExperiment"
+  @open-end-review="openExperimentDialog"
+/>
 
-    <NextFocusCard
-      :active-experiment="expFlow.ctx.value.activeExperiment"
-      @openCheckIn="navigateTo('/check-in')"
-      @start-preset="startExperiment"
-    />
+<ExperimentDialog v-model="experimentDialogOpen" :flow="expFlow" />
+
+<NextFocusCard
+  :active-experiment="expFlow.ctx.value.activeExperiment"
+  @openCheckIn="navigateTo('/check-in')"
+  @start-preset="startExperiment"
+  @openExperiment="openExperimentDialog"
+/>
 
 
 
@@ -282,6 +284,7 @@ import WeeklyAiReportCard from '~/components/dashboard/WeeklyAiReportCard.vue'
 import WeeklyGoalsCard from '~/components/dashboard/WeeklyGoalsCard.vue'
 import NextFocusCard from '~/components/dashboard/NextFocusCard.vue'
 import ExperimentInProgressCard from '~/components/experiments/ExperimentInProgressCard.vue'
+import ExperimentDialog from '~/components/ExperimentDialog.vue'
 
 
 type MetricPoint = { time: number; value: number }
@@ -298,6 +301,12 @@ type DailyMetricsRow = {
 const supabase = useSupabaseClient()
 const user = useSupabaseUser()
 
+const experimentDialogOpen = ref(false)
+
+function onOpenEndReview() {
+  experimentDialogOpen.value = true
+  expFlow.openEndConfirm() // sets state='confirm_end'
+}
 
 // Today’s metrics
 const metrics = ref<DailyMetricsRow | null>(null)
@@ -502,7 +511,6 @@ async function loadAI(uid: string) {
 }
 
 const expFlow = useExperimentFlow()
-console.log('expFlow', expFlow)
 const replaceConfirmOpen = ref(false)
 const pendingPreset = ref<Preset | null>(null)
 const activeExpFrom409 = ref<any | null>(null)
@@ -563,10 +571,9 @@ async function loadAll() {
 
 onMounted(async () => {
   loadAll()
-  if (!expFlow.ctx.value.activeExperiment) {
-    await expFlow.loadActive()
-  }
+  await expFlow.loadActive()
 })
+
 
 watch(
   () => uid.value,

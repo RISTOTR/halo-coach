@@ -311,7 +311,6 @@ const uid = computed(() => {
   const u: any = userRef.value
   return u?.id || u?.sub || null
 })
-console.log(uid.value)
 const today = new Date().toISOString().slice(0, 10)
 const date = ref(today)
 

@@ -109,7 +109,7 @@ const loading = ref(false)
 const errorMsg = ref('')
 const step = ref<'presets'|'replace'>('presets')
 
-const activeExperiment = computed(() => props.flow?.ctx?.activeExperiment || null)
+const activeExperiment = computed(() => props.flow?.ctx?.value.activeExperiment || null)
 
 const presets: Preset[] = [
   {
