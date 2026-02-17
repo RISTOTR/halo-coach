@@ -243,6 +243,21 @@ export function useExperimentFlow() {
   // keep ctx.value.activeExperiment as-is
 }
 
+async function openReviewById(id: string) {
+  if (!id) return
+  state.value = 'ending' // reuse “Working…” UI
+  ctx.value.error = null
+  ctx.value.reviewDto = null
+  try {
+    const reviewDto = await $fetch(`/api/ai/experiments/${id}/review`, { method: 'GET' }) as any
+    ctx.value.reviewDto = reviewDto
+    state.value = 'review'
+  } catch (e: any) {
+    ctx.value.error = { message: e?.data?.statusMessage || e?.message || 'Failed to load review' }
+    state.value = 'error'
+  }
+}
+
 
   return {
     state,
@@ -255,6 +270,7 @@ export function useExperimentFlow() {
     startFromPreset,
     goNextFocus,
     close,
-    dismiss
+    dismiss,
+    openReviewById
   }
 }

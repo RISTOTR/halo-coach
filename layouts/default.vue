@@ -24,6 +24,9 @@
             <NuxtLink to="/habits" class="hover:text-emerald-300" active-class="text-emerald-300">
               {{ $t('nav.habits') }}
             </NuxtLink>
+            <NuxtLink to="/experiments" class="hover:text-emerald-300" active-class="text-emerald-300">
+              {{ $t('nav.experiments') }}
+            </NuxtLink>
             <NuxtLink to="/reports" class="hover:text-emerald-300" active-class="text-emerald-300">
               {{ $t('nav.reports') }}
             </NuxtLink>
