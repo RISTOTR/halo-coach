@@ -88,10 +88,11 @@
             <div class="mt-1 text-xs text-white/55">
               {{ it.startDate || '—' }} → {{ it.endDate || '—' }}
             </div>
-          </div>
-          <div v-if="it.outcome?.conclusion" class="mt-1 text-[11px] text-white/45 line-clamp-1">
+            <div v-if="it.outcome?.conclusion" class="mt-1 text-[11px] text-white/45 line-clamp-1">
             {{ it.outcome.conclusion }}
           </div>
+          </div>
+          
           <div class="shrink-0 flex items-center gap-2">
             <span v-if="typeof it.outcome?.confidenceScore === 'number'"
               class="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] text-white/70">

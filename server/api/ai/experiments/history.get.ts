@@ -52,7 +52,8 @@ export default defineEventHandler(async (event) => {
     outcome: r.outcome
       ? {
           alignment: r.outcome.alignment ?? null,
-          confidenceScore: r.outcome.confidence_score ?? null
+          confidenceScore: r.outcome.confidence_score ?? null,
+          conclusion: r.outcome.conclusion ?? null
         }
       : null
   }))

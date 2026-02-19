@@ -42,6 +42,8 @@ type ExperimentReviewDTO = {
     summaryPill: { tone: 'good' | 'bad' | 'neutral'; text: string }
   }
 
+  conclusion: string | null
+
   metrics: {
     target: ReviewMetricDTO
     others: ReviewMetricDTO[]

@@ -155,92 +155,92 @@ Return ONLY the sentence.
     updated_at: new Date().toISOString()
   }
 
-if (finalize) {
-  const o = nextOutcome || {}
+  if (finalize) {
+    const o = nextOutcome || {}
 
-  const alignment = (o.alignment ?? 'unclear') as 'aligned' | 'mismatch' | 'unclear'
+    const alignment = (o.alignment ?? 'unclear') as 'aligned' | 'mismatch' | 'unclear'
 
-  const confidenceScore = typeof o.confidence_score === 'number' ? o.confidence_score : null
-  const confidence = confidenceLabel(confidenceScore)
+    const confidenceScore = typeof o.confidence_score === 'number' ? o.confidence_score : null
+    const confidence = confidenceLabel(confidenceScore)
 
-  const baseline_from = o.windows?.baseline?.start
-  const baseline_to = o.windows?.baseline?.end
-  const experiment_from = o.windows?.experiment?.start
-  const experiment_to = o.windows?.experiment?.end
+    const baseline_from = o.windows?.baseline?.start
+    const baseline_to = o.windows?.baseline?.end
+    const experiment_from = o.windows?.experiment?.start
+    const experiment_to = o.windows?.experiment?.end
 
-  // metrics MUST be jsonb and NOT NULL
-  const metrics = o.metrics ?? null
-  if (!metrics) {
-    throw createError({ statusCode: 409, statusMessage: 'Missing outcome.metrics — end experiment first.' })
+    const metrics = o.metrics ?? null
+    if (!metrics) {
+      throw createError({ statusCode: 409, statusMessage: 'Missing outcome.metrics — end experiment first.' })
+    }
+
+    const targetKey = o.target_metric
+    const baseline_rows =
+      targetKey && metrics?.[targetKey]?.n_baseline != null
+        ? Number(metrics[targetKey].n_baseline)
+        : 0
+
+    const experiment_rows =
+      targetKey && metrics?.[targetKey]?.n_experiment != null
+        ? Number(metrics[targetKey].n_experiment)
+        : 0
+
+    if (!baseline_from || !baseline_to || !experiment_from || !experiment_to) {
+      throw createError({ statusCode: 409, statusMessage: 'Missing outcome windows — end experiment first.' })
+    }
+
+    const targetDelta =
+      targetKey && metrics?.[targetKey]?.delta != null
+        ? Number(metrics[targetKey].delta)
+        : null
+
+    const conclusion = await generateConclusion(event, {
+      title: exp.title,
+      leverRef: exp.lever_ref,
+      targetMetric: exp.target_metric,
+      alignment,
+      confidenceScore,
+      targetDelta,
+      whatWorked: o.what_worked ?? [],
+      tryNext: o.try_next ?? []
+    }).catch(() => null)
+
+    updatePayload.outcome = {
+      ...nextOutcome,
+      conclusion: conclusion ?? null
+    }
+
+    const { error: revErr } = await supabase
+      .from('experiment_reviews')
+      .upsert(
+        {
+          user_id: uid,
+          experiment_id: id,
+
+          subjective_rating,
+          subjective_note,
+
+          baseline_rows,
+          experiment_rows,
+
+          baseline_from,
+          baseline_to,
+          experiment_from,
+          experiment_to,
+
+          confidence,
+          alignment,
+
+          metrics,
+
+          conclusion: conclusion ?? null
+        },
+        { onConflict: 'user_id,experiment_id' }
+      )
+
+    if (revErr) throw createError({ statusCode: 500, statusMessage: revErr.message })
+
+    updatePayload.status = 'completed'
   }
-
-  // Required NOT NULL ints
-  const targetKey = o.target_metric
-  const baseline_rows =
-    targetKey && metrics?.[targetKey]?.n_baseline != null
-      ? Number(metrics[targetKey].n_baseline)
-      : 0
-
-  const experiment_rows =
-    targetKey && metrics?.[targetKey]?.n_experiment != null
-      ? Number(metrics[targetKey].n_experiment)
-      : 0
-
-  // Required NOT NULL dates
-  if (!baseline_from || !baseline_to || !experiment_from || !experiment_to) {
-    throw createError({ statusCode: 409, statusMessage: 'Missing outcome windows — end experiment first.' })
-  }
-
-  // Conclusion (confidence-aware)
-  const targetDelta =
-    targetKey && metrics?.[targetKey]?.delta != null
-      ? Number(metrics[targetKey].delta)
-      : null
-
-  const conclusion = await generateConclusion(event, {
-    title: exp.title,
-    leverRef: exp.lever_ref,
-    targetMetric: exp.target_metric,
-    alignment,
-    confidenceScore,
-    targetDelta,
-    whatWorked: o.what_worked ?? [],
-    tryNext: o.try_next ?? []
-  }).catch(() => null)
-
-  const { error: revErr } = await supabase
-    .from('experiment_reviews')
-    .upsert(
-      {
-        user_id: uid,
-        experiment_id: id,
-
-        subjective_rating,
-        subjective_note,
-
-        baseline_rows,
-        experiment_rows,
-
-        baseline_from,
-        baseline_to,
-        experiment_from,
-        experiment_to,
-
-        confidence,
-        alignment,
-
-        metrics,
-
-        conclusion: conclusion ?? null
-      },
-      { onConflict: 'user_id,experiment_id' }
-    )
-
-  if (revErr) throw createError({ statusCode: 500, statusMessage: revErr.message })
-
-  // Mark completed
-  updatePayload.status = 'completed'
-}
 
   const { data: updated, error: updErr } = await supabase
     .from('experiments')
