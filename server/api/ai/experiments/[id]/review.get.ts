@@ -254,7 +254,7 @@ export default defineEventHandler(async (event): Promise<ExperimentReviewDTO> =>
       confidenceLabel: confLabel,
       summaryPill: { tone: pillTone(alignment), text: pillText }
     },
-
+    conclusion: outcome?.conclusion ?? null,
     metrics: {
       target: targetDTO,
       others

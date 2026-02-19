@@ -19,6 +19,7 @@ type Preset = {
 type FlowState =
   | 'idle'
   | 'loading_active'
+  | 'loading_review'
   | 'ready'
   | 'confirm_end'
   | 'ending'
@@ -115,55 +116,34 @@ export function useExperimentFlow() {
     state.value = 'confirm_end'
   }
 
- async function endExperiment() {
-  const exp = ctx.value.reviewExperiment || ctx.value.activeExperiment
-  if (!exp?.id) return
+  async function endExperiment() {
+    const exp = ctx.value.reviewExperiment || ctx.value.activeExperiment
+    if (!exp?.id) return
 
-  const endDate = ctx.value.endDate || todayISO()
+    const endDate = ctx.value.endDate || todayISO()
 
-  state.value = 'ending'
-  resetTransient(true)     // <-- keep endDate
-  ctx.value.endDate = endDate
+    state.value = 'ending'
+    resetTransient(true)
+    ctx.value.endDate = endDate
 
-  try {
-    const id = exp.id
-    await $fetch(`/api/ai/experiments/${id}/end`, {
-      method: 'POST',
-      body: { endDate }
-    })
+    try {
+      const id = exp.id
+      await $fetch(`/api/ai/experiments/${id}/end`, {
+        method: 'POST',
+        body: { endDate }
+      })
 
-    const reviewDto = await $fetch(`/api/ai/experiments/${id}/review`, { method: 'GET' }) as any
-    ctx.value.reviewDto = reviewDto
+      const reviewDto = await $fetch(`/api/ai/experiments/${id}/review`, { method: 'GET' }) as any
+      ctx.value.reviewDto = reviewDto
 
-    ctx.value.activeExperiment = null
-    ctx.value.reviewExperiment = null
-    state.value = 'review'
-  } catch (e: any) {
-    ctx.value.error = { message: e?.data?.statusMessage || e?.message || 'Failed to end experiment' }
-    state.value = 'error'
+      ctx.value.activeExperiment = null
+      ctx.value.reviewExperiment = null
+      state.value = 'subjective'
+    } catch (e: any) {
+      ctx.value.error = { message: e?.data?.statusMessage || e?.message || 'Failed to end experiment' }
+      state.value = 'error'
+    }
   }
-}
-
-  async function finalizeReview(payload: { whatWorked?: string[]; tryNext?: string[] }) {
-  const review = ctx.value.reviewDto
-  if (!review?.id) return
-
-  state.value = 'submitting_review'
-  try {
-    await $fetch(`/api/ai/experiments/${review.id}/review`, {
-      method: 'POST',
-      body: { ...payload, finalize: true }
-    })
-
-    // refresh active (should be null)
-    await loadActive()
-    state.value = 'next_focus'
-  } catch (e: any) {
-    ctx.value.error = { message: e?.data?.statusMessage || e?.message || 'Failed to finalize review' }
-    state.value = 'error'
-  }
-}
-
 
   async function continueExperiment() {
     // Continue only makes sense for an ACTIVE experiment
@@ -235,19 +215,18 @@ export function useExperimentFlow() {
   }
 
   function dismiss() {
-  // close the dialog, but keep the active experiment loaded
-  state.value = 'ready'
-  ctx.value.reviewExperiment = null
-  ctx.value.reviewDto = null
-  ctx.value.error = null
-  // keep ctx.value.activeExperiment as-is
-}
+    state.value = 'ready'
+    ctx.value.reviewExperiment = null
+    ctx.value.reviewDto = null
+    ctx.value.error = null
+  }
 
-async function openReviewById(id: string) {
+  async function openReviewById(id: string) {
   if (!id) return
-  state.value = 'ending' // reuse “Working…” UI
+  state.value = 'loading_review'
   ctx.value.error = null
   ctx.value.reviewDto = null
+
   try {
     const reviewDto = await $fetch(`/api/ai/experiments/${id}/review`, { method: 'GET' }) as any
     ctx.value.reviewDto = reviewDto
@@ -259,18 +238,57 @@ async function openReviewById(id: string) {
 }
 
 
+  async function finalizeReview(payload: { whatWorked?: string[]; tryNext?: string[] } = {}) {
+    const dto = ctx.value.reviewDto
+    const id = dto?.id
+    if (!id) return
+
+    state.value = 'submitting_review'
+    ctx.value.error = null
+
+    try {
+      const res = await $fetch(`/api/ai/experiments/${id}/review`, {
+        method: 'POST',
+        body: {
+          ...payload,
+          finalize: true,
+          subjectiveRating: ctx.value.subjectiveRating ?? undefined,
+          subjectiveNote: ctx.value.subjectiveNote?.trim() ? ctx.value.subjectiveNote.trim() : undefined
+        }
+      }) as any
+
+      if (ctx.value.reviewDto?.outcome) {
+        ctx.value.reviewDto.outcome.whatWorked = payload.whatWorked ?? ctx.value.reviewDto.outcome.whatWorked
+        ctx.value.reviewDto.outcome.tryNext = payload.tryNext ?? ctx.value.reviewDto.outcome.tryNext
+        ctx.value.reviewDto.status = res?.experiment?.status || 'completed'
+      }
+
+      await loadActive()
+      state.value = 'next_focus'
+    } catch (e: any) {
+      ctx.value.error = { message: e?.data?.statusMessage || e?.message || 'Failed to finalize review' }
+      state.value = 'error'
+    }
+  }
+
+  function submitSubjective() {
+    if (!ctx.value.subjectiveRating) return
+    state.value = 'review'
+  }
+
   return {
     state,
     ctx,
     loadActive,
     openEndConfirm,
     endExperiment,
-    finalizeReview,
     continueExperiment,
     startFromPreset,
     goNextFocus,
     close,
     dismiss,
-    openReviewById
+    openReviewById,
+    finalizeReview,
+    submitSubjective
   }
 }

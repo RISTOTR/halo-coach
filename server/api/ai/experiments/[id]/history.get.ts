@@ -76,7 +76,7 @@ export default defineEventHandler(async (event): Promise<{ items: ExperimentHist
 
   const { data, error } = await supabase
     .from('experiments')
-    .select('id,title,status,start_date,end_date,lever_ref,target_metric,outcome')
+    .select('id,created_at,experiment_id,confidence,alignment,subjective_rating,baseline_from,baseline_to,experiment_from,experiment_to,metrics,conclusion')
     .eq('user_id', uid)
     .in('status', statuses)
     .order('start_date', { ascending: false })
