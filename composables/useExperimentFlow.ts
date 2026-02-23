@@ -262,7 +262,6 @@ export function useExperimentFlow() {
         ctx.value.reviewDto.outcome.tryNext = payload.tryNext ?? ctx.value.reviewDto.outcome.tryNext
         ctx.value.reviewDto.status = res?.experiment?.status || 'completed'
       }
-
       await loadActive()
       state.value = 'next_focus'
     } catch (e: any) {

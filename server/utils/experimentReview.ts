@@ -12,6 +12,13 @@ type DailyMetricRow = {
 
 const EPS = 1e-9
 
+function daysInclusive(start: string, end: string) {
+  const s = new Date(`${start}T00:00:00Z`).getTime()
+  const e = new Date(`${end}T00:00:00Z`).getTime()
+  const diff = Math.floor((e - s) / (1000 * 60 * 60 * 24))
+  return Math.max(1, diff + 1)
+}
+
 function mean(values: (number | null | undefined)[]) {
   const v = values.filter((x): x is number => typeof x === 'number' && Number.isFinite(x))
   if (v.length === 0) return null
@@ -104,13 +111,21 @@ export async function computeExperimentReview(opts: {
   const minExperiment = 4
   if (baselineRows.length < minBaseline || duringRows.length < minExperiment) {
     return {
-      ok: false as const,
-      reason: 'insufficient_data',
-      baselineRows: baselineRows.length,
-      experimentRows: duringRows.length,
-      required: { minBaseline, minExperiment },
-      windows: { baselineFrom: baselineFromStr, baselineTo: baselineToStr, start: opts.startDate, end: opts.endDate }
-    }
+  ok: false as const,
+  reason: 'insufficient_data',
+  coverage: {
+    baselineRows: baselineRows.length,
+    experimentRows: duringRows.length,
+    baselineWindowDays: daysInclusive(baselineFromStr, baselineToStr),
+    experimentWindowDays: daysInclusive(opts.startDate, opts.endDate),
+    baselineDaysRequested: baselineDays,
+  },
+  required: { minBaseline, minExperiment },
+  windows: {
+    baseline: { start: baselineFromStr, end: baselineToStr },
+    experiment: { start: opts.startDate, end: opts.endDate },
+  }
+}
   }
 
   const confidence = confidenceFromSample(baselineRows.length, duringRows.length)
@@ -125,20 +140,23 @@ export async function computeExperimentReview(opts: {
     outdoor_minutes: metricStats(baselineRows, duringRows, 'outdoor_minutes'),
   }
 
-  return {
-    ok: true as const,
-    sample: {
-      baselineDays,
-      baselineRows: baselineRows.length,
-      experimentRows: duringRows.length,
-    },
-    windows: {
-      baselineFrom: baselineFromStr,
-      baselineTo: baselineToStr,
-      start: opts.startDate,
-      end: opts.endDate,
-    },
-    confidence,
-    metrics,
-  }
+  const baselineWindowDays = daysInclusive(baselineFromStr, baselineToStr)
+const experimentWindowDays = daysInclusive(opts.startDate, opts.endDate)
+
+return {
+  ok: true as const,
+  coverage: {
+    baselineRows: baselineRows.length,
+    experimentRows: duringRows.length,
+    baselineWindowDays,
+    experimentWindowDays,
+    baselineDaysRequested: baselineDays, // optional but nice
+  },
+  windows: {
+    baseline: { start: baselineFromStr, end: baselineToStr },
+    experiment: { start: opts.startDate, end: opts.endDate },
+  },
+  confidence,
+  metrics,
+}
 }
