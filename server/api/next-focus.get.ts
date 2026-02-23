@@ -495,10 +495,10 @@ export default defineEventHandler(async (event) => {
   )
   const checkins = checkinRows.length
 
-  // honest gating
-  if (checkins < 3) {
-    return { period: { start: startISO, end: endISO, checkins }, options: [] }
-  }
+ if (checkins < 3) {
+  const fallback2 = avoidActiveAndEnsureTwo(buildDeterministicOptions([]), activeLeverRef)
+  return { period: { start: startISO, end: endISO, checkins }, options: fallback2 }
+}
 
   const fallback2 = avoidActiveAndEnsureTwo(
     buildDeterministicOptions(checkinRows),
@@ -549,10 +549,11 @@ Rules:
 - Option B = higher impact (if plausible) and must be DIFFERENT from A.
 - MUST NOT return a preset whose leverRef equals "${activeLeverRef}" if active exists.
 - If both options include a preset, preset.leverRef MUST be different between Option A and Option B.
+- If you accidentally include the active leverRef, replace it with another safe leverRef.
 - Keep "why" concrete and short.
 - Do NOT mention raw numeric values.
 - If you suggest a metric lever, leverRef MUST be one of:
-  sleep_hours, outdoor_minutes, water_liters, steps, mood, energy, stress
+  sleep_hours, outdoor_minutes, water_liters, steps
 - targetMetric MUST be one of:
   energy, stress, mood, sleep_hours, steps, water_liters, outdoor_minutes
 - If data is sparse/holiday gaps, still output TWO safe defaults.
@@ -580,6 +581,8 @@ Schema:
     { ...second option... }
   ]
 }
+
+${activeContext}
 
 Context (7-day summary):
 ${JSON.stringify(summary)}

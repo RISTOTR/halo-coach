@@ -24,35 +24,27 @@
             <div class="grid grid-cols-2 gap-3">
               <div>
                 <label class="mb-1 block text-[11px] text-slate-400">End date</label>
-                <input
-                  v-model="flow.ctx.value.endDate"
-                  type="date"
-                  class="w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-1.5 text-xs text-slate-100"
-                />
+                <input v-model="flow.ctx.value.endDate" type="date"
+                  class="w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-1.5 text-xs text-slate-100" />
               </div>
             </div>
 
             <div class="flex items-center justify-end gap-2 pt-2">
               <button
                 class="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-100 hover:bg-white/10"
-                @click="close"
-              >
+                @click="close">
                 Cancel
               </button>
               <button
                 class="rounded-full border border-emerald-500/60 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20"
-                @click="flow.endExperiment"
-              >
+                @click="flow.endExperiment">
                 End & Review
               </button>
             </div>
           </div>
 
           <!-- WORKING -->
-          <div
-            v-else-if="isWorking"
-            class="text-[12px] text-slate-300"
-          >
+          <div v-else-if="isWorking" class="text-[12px] text-slate-300">
             {{ workingLabel }}
           </div>
 
@@ -63,43 +55,29 @@
             </p>
 
             <div class="grid gap-2">
-              <label
-                v-for="opt in options"
-                :key="opt.value"
-                class="flex items-center justify-between gap-3 rounded-lg border border-white/15 bg-slate-900/70 px-3 py-2 text-xs text-slate-100"
-              >
+              <label v-for="opt in options" :key="opt.value"
+                class="flex items-center justify-between gap-3 rounded-lg border border-white/15 bg-slate-900/70 px-3 py-2 text-xs text-slate-100">
                 <span class="text-slate-100">{{ opt.label }}</span>
-                <input
-                  type="radio"
-                  name="subjective"
-                  :value="opt.value"
-                  v-model="flow.ctx.value.subjectiveRating"
-                />
+                <input type="radio" name="subjective" :value="opt.value" v-model="flow.ctx.value.subjectiveRating" />
               </label>
             </div>
 
             <div>
               <label class="mb-1 block text-[11px] text-slate-400">Optional note</label>
-              <textarea
-                v-model="flow.ctx.value.subjectiveNote"
-                rows="3"
+              <textarea v-model="flow.ctx.value.subjectiveNote" rows="3"
                 class="w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-2 text-xs text-slate-100"
-                placeholder="Anything you noticed?"
-              />
+                placeholder="Anything you noticed?" />
             </div>
 
             <div class="flex items-center justify-end gap-2 pt-2">
               <button
                 class="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-100 hover:bg-white/10"
-                @click="close"
-              >
+                @click="close">
                 Cancel
               </button>
               <button
                 class="rounded-full border border-emerald-500/60 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20 disabled:opacity-50"
-                :disabled="!flow.ctx.value.subjectiveRating"
-                @click="flow.submitSubjective"
-              >
+                :disabled="!flow.ctx.value.subjectiveRating" @click="flow.submitSubjective">
                 Review
               </button>
             </div>
@@ -107,205 +85,173 @@
 
           <!-- REVIEW (Phase 3 DTO) -->
           <div v-else-if="flow.state.value === 'review'" class="space-y-4">
-            <div class="text-[12px] text-slate-300">
-              Here’s what changed (baseline → experiment).
-            </div>
+            <transition name="fadeUp" appear>
+              <div :key="dto?.id || 'review'">
+                <div class="text-[12px] text-slate-300">
+                  Here’s what changed (baseline → experiment).
+                </div>
 
-            <div v-if="coverage.baselineDays != null && coverage.experimentDays != null" class="text-[11px] text-white/45">
-              Window: baseline {{ coverage.baselineDays }} days · experiment {{ coverage.experimentDays }} days
-            </div>
+                <div v-if="coverage.baselineDays != null && coverage.experimentDays != null"
+                  class="text-[11px] text-white/45">
+                  Window: baseline {{ coverage.baselineDays }} days · experiment {{ coverage.experimentDays }} days
+                </div>
 
-            <div v-if="flow.ctx.value.reviewDto" class="space-y-3">
-              <!-- Outcome pills -->
-              <div class="flex flex-wrap items-center gap-2">
-                <span class="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] text-white/70">
-                  {{ flow.ctx.value.reviewDto?.outcome?.alignment || 'unclear' }}
-                </span>
-                <span class="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] text-white/70">
-                  Confidence: {{ flow.ctx.value.reviewDto?.outcome?.confidenceLabel || 'low' }}
-                </span>
-              </div>
-
-              <!-- Summary pill -->
-              <div class="rounded-xl border border-white/10 bg-black/10 px-3 py-2 text-[11px] text-white/70">
-                <span class="font-semibold text-white/80">
-                  {{ flow.ctx.value.reviewDto?.outcome?.summaryPill?.text }}
-                </span>
-              </div>
-
-              <!-- Conclusion -->
-              <div
-                v-if="flow.ctx.value.reviewDto?.conclusion"
-                class="rounded-xl border border-white/10 bg-black/10 px-3 py-2 text-[12px] text-white/75"
-              >
-                {{ flow.ctx.value.reviewDto.conclusion }}
-              </div>
-
-              <!-- Target metric -->
-              <div class="rounded-xl border border-white/10 bg-slate-900/60 px-3 py-2">
-                <div class="flex items-center justify-between">
-                  <div class="text-xs font-medium text-slate-100">
-                    {{ flow.ctx.value.reviewDto.metrics.target.label }} (target)
-                  </div>
-
-                  <div
-                    class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px]"
-                    :class="deltaBadgeClass(
-                      isDeltaGood(
-                        flow.ctx.value.reviewDto.metrics.target.key || flow.ctx.value.reviewDto.targetMetric,
-                        metricDelta(flow.ctx.value.reviewDto.metrics.target).dir
-                      )
-                    )"
-                  >
-                    <span class="opacity-80">
-                      {{ arrow(metricDelta(flow.ctx.value.reviewDto.metrics.target).dir) }}
+                <div v-if="flow.ctx.value.reviewDto" class="space-y-3">
+                  <!-- Outcome pills -->
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] text-white/70">
+                      {{ flow.ctx.value.reviewDto?.outcome?.alignment || 'unclear' }}
                     </span>
-                    <span>
-                      {{ flow.ctx.value.reviewDto.metrics.target.deltaText }}
+                    <span class="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] text-white/70">
+                      Confidence: {{ flow.ctx.value.reviewDto?.outcome?.confidenceLabel || 'low' }}
                     </span>
                   </div>
-                </div>
 
-                <div class="mt-1 text-[11px] text-slate-300">
-                  Baseline {{ flow.ctx.value.reviewDto.metrics.target.baselineAvg ?? '—' }}
-                  → Experiment {{ flow.ctx.value.reviewDto.metrics.target.experimentAvg ?? '—' }}
-                </div>
+                  <!-- Summary pill -->
+                  <div class="rounded-xl border border-white/10 bg-black/10 px-3 py-2 text-[11px] text-white/70">
+                    <span class="font-semibold text-white/80">
+                      {{ flow.ctx.value.reviewDto?.outcome?.summaryPill?.text }}
+                    </span>
+                  </div>
 
-                <div
-                  v-if="flow.ctx.value.reviewDto.metrics.target.isSignal === false"
-                  class="mt-1 text-[10px] text-white/45"
-                >
-                  Not enough logged days to evaluate reliably yet.
-                </div>
-              </div>
+                  <!-- Conclusion -->
+                  <div v-if="flow.ctx.value.reviewDto?.conclusion"
+                    class="rounded-xl border border-white/10 bg-black/10 px-3 py-2 text-[12px] text-white/75">
+                    {{ flow.ctx.value.reviewDto.conclusion }}
+                  </div>
 
-              <!-- Other metrics -->
-              <div class="grid gap-2">
-                <div
-                  v-for="m in flow.ctx.value.reviewDto.metrics.others"
-                  :key="m.key"
-                  class="rounded-xl border border-white/10 bg-slate-900/50 px-3 py-2"
-                >
-                  <div class="flex items-center justify-between">
-                    <div class="text-xs font-medium text-slate-100">{{ m.label }}</div>
+                  <!-- Target metric -->
+                  <div class="rounded-xl border border-white/10 bg-slate-900/60 px-3 py-2">
+                    <div class="flex items-center justify-between">
+                      <div class="text-xs font-medium text-slate-100">
+                        {{ flow.ctx.value.reviewDto.metrics.target.label }} (target)
+                      </div>
 
-                    <div
-                      class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px]"
-                      :class="deltaBadgeClass(isDeltaGood(m.key, metricDelta(m).dir))"
-                    >
-                      <span class="opacity-80">{{ arrow(metricDelta(m).dir) }}</span>
-                      <span>{{ m.deltaText }}</span>
+                      <div class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px]" :class="deltaBadgeClass(
+                        isDeltaGood(
+                          flow.ctx.value.reviewDto.metrics.target.key || flow.ctx.value.reviewDto.targetMetric,
+                          metricDelta(flow.ctx.value.reviewDto.metrics.target).dir
+                        )
+                      )">
+                        <span class="opacity-80">
+                          {{ arrow(metricDelta(flow.ctx.value.reviewDto.metrics.target).dir) }}
+                        </span>
+                        <span>
+                          {{ flow.ctx.value.reviewDto.metrics.target.deltaText }}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div class="mt-1 text-[11px] text-slate-300">
+                      Baseline {{ flow.ctx.value.reviewDto.metrics.target.baselineAvg ?? '—' }}
+                      → Experiment {{ flow.ctx.value.reviewDto.metrics.target.experimentAvg ?? '—' }}
+                    </div>
+
+                    <div v-if="flow.ctx.value.reviewDto.metrics.target.isSignal === false"
+                      class="mt-1 text-[10px] text-white/45">
+                      Not enough logged days to evaluate reliably yet.
                     </div>
                   </div>
 
-                  <div class="mt-1 text-[11px] text-slate-300">
-                    Baseline {{ m.baselineAvg ?? '—' }} → Experiment {{ m.experimentAvg ?? '—' }}
+                  <!-- Other metrics -->
+                  <div class="grid gap-2">
+                    <div v-for="m in flow.ctx.value.reviewDto.metrics.others" :key="m.key"
+                      class="rounded-xl border border-white/10 bg-slate-900/50 px-3 py-2">
+                      <div class="flex items-center justify-between">
+                        <div class="text-xs font-medium text-slate-100">{{ m.label }}</div>
+
+                        <div class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px]"
+                          :class="deltaBadgeClass(isDeltaGood(m.key, metricDelta(m).dir))">
+                          <span class="opacity-80">{{ arrow(metricDelta(m).dir) }}</span>
+                          <span>{{ m.deltaText }}</span>
+                        </div>
+                      </div>
+
+                      <div class="mt-1 text-[11px] text-slate-300">
+                        Baseline {{ m.baselineAvg ?? '—' }} → Experiment {{ m.experimentAvg ?? '—' }}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            <div v-else class="text-[12px] text-slate-300">
-              No review data available.
-            </div>
-
-            <!-- Notes -->
-            <div class="rounded-xl border border-white/10 bg-black/10 p-3 space-y-3">
-              <div>
-                <div class="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/45">
-                  What worked
+                <div v-else class="text-[12px] text-slate-300">
+                  No review data available.
                 </div>
 
-                <div class="mt-2 flex flex-wrap gap-2">
+                <!-- Notes -->
+                <div class="rounded-xl border border-white/10 bg-black/10 p-3 space-y-3">
+                  <div>
+                    <div class="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/45">
+                      What worked
+                    </div>
+
+                    <div class="mt-2 flex flex-wrap gap-2">
+                      <button v-for="w in whatWorked" :key="w" type="button"
+                        class="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-white/75 hover:bg-white/10"
+                        @click="removeChip('worked', w)" title="Remove">
+                        {{ w }} <span class="opacity-60">×</span>
+                      </button>
+
+                      <div class="flex items-center gap-2">
+                        <input v-model="whatWorkedInput"
+                          class="w-44 rounded-lg border border-white/10 bg-slate-900/60 px-2 py-1 text-[11px] text-white/80"
+                          placeholder="Add…" @keydown.enter.prevent="addChip('worked')" />
+                        <button type="button"
+                          class="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[11px] text-white/75 hover:bg-white/10"
+                          @click="addChip('worked')">
+                          Add
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div class="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/45">
+                      Try next
+                    </div>
+
+                    <div class="mt-2 flex flex-wrap gap-2">
+                      <button v-for="t in tryNext" :key="t" type="button"
+                        class="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-white/75 hover:bg-white/10"
+                        @click="removeChip('next', t)" title="Remove">
+                        {{ t }} <span class="opacity-60">×</span>
+                      </button>
+
+                      <div class="flex items-center gap-2">
+                        <input v-model="tryNextInput"
+                          class="w-44 rounded-lg border border-white/10 bg-slate-900/60 px-2 py-1 text-[11px] text-white/80"
+                          placeholder="Add…" @keydown.enter.prevent="addChip('next')" />
+                        <button type="button"
+                          class="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[11px] text-white/75 hover:bg-white/10"
+                          @click="addChip('next')">
+                          Add
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-2 pt-1">
                   <button
-                    v-for="w in whatWorked"
-                    :key="w"
-                    type="button"
-                    class="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-white/75 hover:bg-white/10"
-                    @click="removeChip('worked', w)"
-                    title="Remove"
-                  >
-                    {{ w }} <span class="opacity-60">×</span>
+                    class="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-100 hover:bg-white/10"
+                    @click="close">
+                    Close
                   </button>
 
-                  <div class="flex items-center gap-2">
-                    <input
-                      v-model="whatWorkedInput"
-                      class="w-44 rounded-lg border border-white/10 bg-slate-900/60 px-2 py-1 text-[11px] text-white/80"
-                      placeholder="Add…"
-                      @keydown.enter.prevent="addChip('worked')"
-                    />
-                    <button
-                      type="button"
-                      class="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[11px] text-white/75 hover:bg-white/10"
-                      @click="addChip('worked')"
-                    >
-                      Add
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <div class="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/45">
-                  Try next
-                </div>
-
-                <div class="mt-2 flex flex-wrap gap-2">
                   <button
-                    v-for="t in tryNext"
-                    :key="t"
-                    type="button"
-                    class="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-white/75 hover:bg-white/10"
-                    @click="removeChip('next', t)"
-                    title="Remove"
-                  >
-                    {{ t }} <span class="opacity-60">×</span>
+                    class="rounded-full border border-emerald-500/60 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20"
+                    @click="flow.goNextFocus">
+                    What next?
                   </button>
 
-                  <div class="flex items-center gap-2">
-                    <input
-                      v-model="tryNextInput"
-                      class="w-44 rounded-lg border border-white/10 bg-slate-900/60 px-2 py-1 text-[11px] text-white/80"
-                      placeholder="Add…"
-                      @keydown.enter.prevent="addChip('next')"
-                    />
-                    <button
-                      type="button"
-                      class="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[11px] text-white/75 hover:bg-white/10"
-                      @click="addChip('next')"
-                    >
-                      Add
-                    </button>
-                  </div>
+                  <button v-if="canFinalize" :disabled="flow.state.value === 'submitting_review'"
+                    class="rounded-full border border-emerald-500/60 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20 disabled:opacity-50"
+                    @click="onFinalize">
+                    Finalize
+                  </button>
                 </div>
               </div>
-            </div>
-
-            <div class="flex items-center justify-end gap-2 pt-1">
-              <button
-                class="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-100 hover:bg-white/10"
-                @click="close"
-              >
-                Close
-              </button>
-
-              <button
-                class="rounded-full border border-emerald-500/60 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20"
-                @click="flow.goNextFocus"
-              >
-                What next?
-              </button>
-
-              <button
-                v-if="canFinalize"
-                :disabled="flow.state.value === 'submitting_review'"
-                class="rounded-full border border-emerald-500/60 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20 disabled:opacity-50"
-                @click="onFinalize"
-              >
-                Finalize
-              </button>
-            </div>
+            </transition>
           </div>
 
           <!-- NEXT FOCUS -->
@@ -316,8 +262,7 @@
             <div class="flex items-center justify-end gap-2 pt-2">
               <button
                 class="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-100 hover:bg-white/10"
-                @click="close"
-              >
+                @click="close">
                 Close
               </button>
             </div>
@@ -330,8 +275,7 @@
             <div class="flex items-center justify-end pt-2">
               <button
                 class="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-100 hover:bg-white/10"
-                @click="close"
-              >
+                @click="close">
                 Close
               </button>
             </div>
@@ -353,14 +297,12 @@
             <div class="flex items-center justify-end gap-2 pt-2">
               <button
                 class="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-100 hover:bg-white/10"
-                @click="close"
-              >
+                @click="close">
                 Close
               </button>
               <button
                 class="rounded-full border border-emerald-500/60 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20"
-                @click="flow.openEndConfirm()"
-              >
+                @click="flow.openEndConfirm()">
                 End & Review
               </button>
             </div>
@@ -537,3 +479,15 @@ function close() {
   props.flow.dismiss()
 }
 </script>
+
+<style scoped>
+.fadeUp-enter-active,
+.fadeUp-leave-active {
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+.fadeUp-enter-from,
+.fadeUp-leave-to {
+  opacity: 0;
+  transform: translateY(6px);
+}
+</style>

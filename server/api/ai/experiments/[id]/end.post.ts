@@ -230,7 +230,7 @@ export default defineEventHandler(async (event) => {
 
   if (updErr) throw createError({ statusCode: 500, statusMessage: updErr.message })
 
-  // Optional: log event (best-effort)
+
   try {
     await supabase.from('experiment_events').insert({
       user_id: uid,
@@ -240,6 +240,17 @@ export default defineEventHandler(async (event) => {
     })
   } catch (e) {
     console.error('experiment_events insert failed (ignored)', e)
+  }
+
+  try {
+    const { error: upsertErr } = await supabase.rpc('upsert_experiment_effects_v1', {
+      p_experiment_id: id,
+      p_method_version: 1
+    })
+
+    if (upsertErr) console.error('experiment_effects upsert failed (ignored)', upsertErr)
+  } catch (e) {
+    console.error('experiment_effects upsert failed (ignored)', e)
   }
 
   return { success: true, alreadyEnded: false, experiment: updated }
