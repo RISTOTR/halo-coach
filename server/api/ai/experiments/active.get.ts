@@ -40,6 +40,10 @@ function labelForMetric(key: string) {
 }
 
 const LEVER_LABELS: Record<string, string> = {
+  sleep_hours: 'Sleep consistency',
+  mood: 'Mood practice',
+  stress: 'Stress reduction',
+  energy: 'Energy boost',
   cold_shower: 'Cold shower',
   evening_walk: 'Evening walk',
   morning_walk: 'Morning walk',

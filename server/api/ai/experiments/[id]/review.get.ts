@@ -113,6 +113,10 @@ function unitForMetric(key: string) {
 
 // Lever labels (fallback to ref)
 const LEVER_LABELS: Record<string, string> = {
+  sleep_hours: 'Sleep consistency',
+  mood: 'Mood practice',
+  stress: 'Stress reduction',
+  energy: 'Energy boost',
   cold_shower: 'Cold shower',
   evening_walk: 'Evening walk',
   morning_walk: 'Morning walk',
@@ -206,11 +210,14 @@ export default defineEventHandler(async (event): Promise<ExperimentReviewDTO> =>
       n_baseline: Number(row.baseline_rows ?? 0),
       n_experiment: Number(row.experiment_rows ?? 0)
     }
+    console.log('effectsRow', row)
   }
+
 
   // Signal gating (keep same rules)
   const MIN_SIGNAL = 0.2
-  const MIN_POINTS = 4
+  const MIN_POINTS_BASELINE = 4
+const MIN_POINTS_EXPERIMENT = 3
 
   function toMetricDTO(key: string): ReviewMetricDTO {
     const m = metricsObj[key] || {}
@@ -226,8 +233,8 @@ export default defineEventHandler(async (event): Promise<ExperimentReviewDTO> =>
       typeof d === 'number' &&
       Number.isFinite(d) &&
       Math.abs(d) >= MIN_SIGNAL &&
-      nBase >= MIN_POINTS &&
-      nExp >= MIN_POINTS
+      nBase >= MIN_POINTS_BASELINE &&
+      nExp >= MIN_POINTS_EXPERIMENT
 
     return {
       key,

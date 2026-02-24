@@ -4,7 +4,7 @@
              relative">
       <header class="border-b border-white/10 bg-black/40 backdrop-blur">
         <div class="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-          <div class="flex items-center gap-2">
+          <!-- <div class="flex items-center gap-2">
             <div
               class="h-7 w-7 rounded-xl bg-emerald-400/20 border border-emerald-400/40 flex items-center justify-center text-xs font-bold">
               H
@@ -13,7 +13,21 @@
               Halo
               <span class="ml-1 text-[11px] text-slate-400">Holistic Habit Coach</span>
             </div>
-          </div>
+          </div> -->
+          <NuxtLink
+        to="/"
+        class="flex items-center gap-2 group"
+      >
+        <img
+          src="/public/Halo_logo3.png"
+          alt="Halo logo"
+          class="h-8 w-8 my-2 mx-2 rounded-lg shadow-md shadow-emerald-500/20 group-hover:scale-105 transition-transform"
+        >
+        <div class="text-sm font-semibold tracking-tight">
+             
+              <span class="ml-1 text-[11px] text-slate-400">Holistic Habit Coach</span>
+            </div>
+      </NuxtLink>
           <nav class="flex items-center gap-4 text-xs">
             <NuxtLink to="/" class="hover:text-emerald-300" active-class="text-emerald-300">
               {{ $t('nav.dashboard') }}

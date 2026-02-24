@@ -130,13 +130,19 @@ import { parseReport } from '~/server/utils/aiReportContent'
 type WeeklyOut = {
   wins: string[]
   drift: string[]
-  next_focus: string
+  next_focus?: string
   confidence: 'low' | 'moderate' | 'strong'
 }
 
 const supabase = useSupabaseClient()
 
 const loading = ref(false)
+
+const { loadNextFocus } = useNextFocusSuggestions()
+const nf = await loadNextFocus({ windowDays: 60 })
+const text = nf.options
+  .map((o) => `${o.id}: ${o.title} — ${o.why}`)
+  .join('\n\n')
 
 const rawContent = ref<string>('')
 const report = ref<WeeklyOut | null>(null)
@@ -236,15 +242,32 @@ async function loadExisting() {
       return
     }
 
-    const { data, error } = await supabase
-      .from('ai_reports')
-      .select('content, created_at, date')
-      .eq('user_id', currentUser.id)
-      .eq('period', 'weekly')
-      .lte('date', today)
-      .order('date', { ascending: false })
-      .limit(1)
-      .maybeSingle()
+// 1) Try exact today
+let { data, error } = await supabase
+  .from('ai_reports')
+  .select('content, created_at, date')
+  .eq('user_id', currentUser.id)
+  .eq('period', 'weekly')
+  .eq('date', today)
+  .maybeSingle()
+
+if (error) console.error(error)
+
+// 2) Fallback to latest <= today
+if (!data) {
+  const res = await supabase
+    .from('ai_reports')
+    .select('content, created_at, date')
+    .eq('user_id', currentUser.id)
+    .eq('period', 'weekly')
+    .lte('date', today)
+    .order('date', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (res.error) console.error(res.error)
+  data = res.data
+}
 
     if (error) console.error(error)
 
@@ -255,7 +278,28 @@ async function loadExisting() {
     const parsed = parseReport<WeeklyOut>(rawContent.value)
 report.value = parsed
 parseError.value = !!rawContent.value && !parsed
+// If the report exists but doesn't include next_focus, compute a fallback from Phase 4 engine
+// If report exists but next_focus missing/empty, compute a fallback
+if (report.value && (!report.value.next_focus || !report.value.next_focus.trim())) {
+  try {
+    const nf = await $fetch('/api/ai/insights/correlations', {
+      query: { windowDays: 60, minN: 10 },
+      credentials: 'include'
+    }) as any
 
+    const items = Array.isArray(nf?.items) ? nf.items : []
+    const top = items
+      .filter((c: any) => typeof c?.corr === 'number' && Number.isFinite(c.corr))
+      .sort((a: any, b: any) => Math.abs(b.corr) - Math.abs(a.corr))[0]
+
+    report.value.next_focus = top
+      ? `A: Explore ${top.x} → ${top.y} (r=${Number(top.corr).toFixed(2)}, n=${top.n}). B: Run a 7-day experiment for a reliable signal.`
+      : `Run a 5–7 day experiment (stress or sleep consistency) to unlock more reliable insights.`
+  } catch {
+    report.value.next_focus =
+      `Run a 5–7 day experiment (stress or sleep consistency) to unlock more reliable insights.`
+  }
+}
 await loadOverviewMeta()
 
 

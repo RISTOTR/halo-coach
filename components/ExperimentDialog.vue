@@ -256,8 +256,8 @@
 
           <!-- NEXT FOCUS -->
           <div v-else-if="flow.state.value === 'next_focus'" class="space-y-3">
-            <p class="text-[12px] text-slate-300">What would you like to explore next?</p>
-            <p class="text-[11px] text-slate-400">Suggestions come next. For now, this is a placeholder.</p>
+            <NextFocusCard :active-experiment="flow.ctx.value.activeExperiment"
+              @start-preset="flow.startFromPreset($event)" @open-experiment="$emit('openExperiment')" />
 
             <div class="flex items-center justify-end gap-2 pt-2">
               <button
@@ -320,6 +320,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import NextFocusCard from '~/components/dashboard/NextFocusCard.vue'
 
 type SubjectiveRating =
   | 'more_stable'
@@ -485,6 +486,7 @@ function close() {
 .fadeUp-leave-active {
   transition: opacity 160ms ease, transform 160ms ease;
 }
+
 .fadeUp-enter-from,
 .fadeUp-leave-to {
   opacity: 0;

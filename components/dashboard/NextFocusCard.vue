@@ -14,6 +14,10 @@
         <p class="mt-1 text-[11px] text-slate-400">
           Two options — one low effort, one higher impact.
         </p>
+        <div v-if="hint" class="mt-3 rounded-xl border border-white/10 bg-white/5 p-3 text-[11px] text-white/70">
+          <span class="font-semibold text-white/80">Hint:</span>
+          {{ hint }}
+        </div>
       </div>
 
       <button
@@ -107,9 +111,6 @@
         </div>
       </section>
 
-      <p v-if="periodLabel" class="text-[11px] text-white/40">
-        Based on {{ periodLabel }}.
-      </p>
     </div>
   </div>
 </template>
@@ -117,7 +118,6 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
 
-type MetricKey = 'sleep_hours' | 'mood' | 'stress' | 'energy'
 type Effort = 'low' | 'moderate' | 'high'
 type Impact = 'low' | 'moderate' | 'high'
 type TargetMetric =
@@ -164,14 +164,19 @@ const activeLabel = computed(() => {
   return `${title}${started}`
 })
 
-
-const expFlow = useExperimentFlow()
-
-
 const loading = ref(false)
 const error = ref('')
 const options = ref<NextFocusOption[]>([])
-const period = ref<{ start: string; end: string; checkins: number } | null>(null)
+
+const hint = ref<string>('')
+
+function computeHint(meta: any) {
+  const n = meta?.topCorrelation?.n
+  if (typeof n === 'number' && n > 0 && n < 14) {
+    return `Tip: Insights get much more reliable with longer experiments (5–7 days). Right now correlations use n=${n} days of data.`
+  }
+  return 'Tip: Halo becomes much more accurate after a few 5–7 day experiments (1-day tests are mostly noise).'
+}
 
 const statusPill = computed(() => {
   if (hasActiveExperiment.value) return 'Experiment active'
@@ -181,27 +186,19 @@ const statusPill = computed(() => {
   return 'Ready'
 })
 
-const periodLabel = computed(() => {
-  if (!period.value) return ''
-  return `${period.value.checkins}/7 check-ins · ${period.value.start} → ${period.value.end}`
-})
-
-function todayISO() {
-  return new Date().toISOString().slice(0, 10)
-}
+const { loadNextFocus } = useNextFocusSuggestions()
 
 async function load() {
   loading.value = true
   error.value = ''
 
   try {
-    const res = await $fetch('/api/next-focus', { query: { date: todayISO() } }) as any
-    options.value = (res?.options || []) as NextFocusOption[]
-    period.value = res?.period || null
+    const res = await loadNextFocus({ windowDays: 60 })
+    options.value = res.options
+    hint.value = computeHint(res?.debug)// optional; remove period display if you want
   } catch (e: any) {
     error.value = e?.data?.statusMessage || e?.message || 'Could not load next focus.'
     options.value = []
-    period.value = null
   } finally {
     loading.value = false
   }

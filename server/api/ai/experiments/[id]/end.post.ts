@@ -72,6 +72,7 @@ function confidenceScore(opts: { nBase: number; nExp: number; deltaAbs: number |
   // Simple + stable: data coverage first, then effect size
   const { nBase, nExp, deltaAbs } = opts
   const MIN_POINTS = 4
+if (nBase < MIN_POINTS || nExp < MIN_POINTS) return 0.25
 
   if (nBase < MIN_POINTS || nExp < MIN_POINTS) return 0.25
   if (typeof deltaAbs !== 'number' || !Number.isFinite(deltaAbs)) return 0.35

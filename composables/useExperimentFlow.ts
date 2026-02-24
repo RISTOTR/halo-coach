@@ -139,6 +139,7 @@ export function useExperimentFlow() {
       ctx.value.activeExperiment = null
       ctx.value.reviewExperiment = null
       state.value = 'subjective'
+      console.log('reviewDto', reviewDto)
     } catch (e: any) {
       ctx.value.error = { message: e?.data?.statusMessage || e?.message || 'Failed to end experiment' }
       state.value = 'error'
