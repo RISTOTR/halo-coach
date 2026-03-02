@@ -1,5 +1,5 @@
-import type { GateResult, NextFocusOption } from '~/server/lib/ai/types'
-import { noveltyPenalty } from '~/server/lib/ai/novelty'
+import type { GateResult, NextFocusOption } from './types.ts'
+import { noveltyPenalty } from './novelty.ts'
 
 type Effort = 'low' | 'moderate' | 'high'
 type Impact = 'low' | 'moderate' | 'high'

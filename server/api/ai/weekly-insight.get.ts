@@ -2,8 +2,7 @@ import { defineEventHandler, getQuery, createError } from 'h3'
 import { z } from 'zod'
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
 import { toWeekKey } from '../../lib/time/weekKey'
-
-import { requireUid } from '~/server/lib/auth/uid'
+import { requireUid } from '../../lib/auth/uid'
 
 const querySchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/)

@@ -2,20 +2,20 @@ import { defineEventHandler, readBody, createError } from 'h3'
 import { z } from 'zod'
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
 
-import type { WeeklyInsight } from '~/server/lib/ai/types'
-import { gate } from '~/server/lib/ai/gate'
-import { computeDeltas, makeDriftSummary } from '~/server/lib/ai/drift'
-import { noveltyPenalty } from '~/server/lib/ai/novelty'
-import { scoreAndSort } from '~/server/lib/ai/rank'
-import { toWeekKey, weekWindowEnd } from '~/server/lib/time/weekKey'
+import type { WeeklyInsight } from '../../lib/ai/types.ts'
+import { gate } from '../../lib/ai/gate.ts'
+import { computeDeltas, makeDriftSummary } from '../../lib/ai/drift.ts'
+import { noveltyPenalty } from '../../lib/ai/novelty.ts'
+import { scoreAndSort } from '../../lib/ai/rank.ts'
+import { toWeekKey, weekWindowEnd } from '../../lib/time/weekKey.ts'
 
-import { PRESETS } from '~/server/lib/ai/presets'
-import { buildCandidates } from '~/server/lib/ai/buildCandidates'
-import { buildLeverSummary } from '~/server/lib/ai/buildLeverSummary'
-import { requireUid } from '~/server/lib/auth/uid'
-import { patternPrior } from '~/server/lib/ai/patternPrior'
+import { PRESETS } from '../../lib/ai/presets.ts'
+import { buildCandidates } from '../../lib/ai/buildCandidates.ts'
+import { buildLeverSummary } from '../../lib/ai/buildLeverSummary.ts'
+import { requireUid } from '../../lib/auth/uid.ts'
+import { patternPrior } from '../../lib/ai/patternPrior.ts'
 
-import { formatOptionUI } from '~/server/lib/ai/formatOptionUI'
+import { formatOptionUI } from '../../lib/ai/formatOptionUI.ts'
 
 const bodySchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
