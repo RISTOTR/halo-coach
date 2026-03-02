@@ -1,9 +1,13 @@
 import { defineEventHandler, createError } from 'h3'
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
 
+import { requireUid } from '~/server/lib/auth/uid'
+
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)
-  if (!user) throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
+  if (!user) throw createError({ statusCode: 401 })
+
+  const uid = requireUid(user)
 
   const supabase = await serverSupabaseClient(event)
 
@@ -18,7 +22,7 @@ export default defineEventHandler(async (event) => {
   const { data: lastInsight } = await supabase
     .from('ai_weekly_insights')
     .select('computed_at')
-    .eq('user_id', user.id)
+    .eq('user_id', uuid)
     .order('computed_at', { ascending: false })
     .limit(1)
     .maybeSingle()
@@ -26,7 +30,7 @@ export default defineEventHandler(async (event) => {
   const { data: lastEvent } = await supabase
     .from('insight_events')
     .select('created_at,kind')
-    .eq('user_id', user.id)
+    .eq('user_id', uid)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle()

@@ -25,14 +25,36 @@ export function scoreAndSort(params: {
 }) {
   return params.options
     .map(o => {
-      const novelty = o.evidence?.noveltyPenalty ?? 0
-      const score =
-        impactWeight(o._expectedImpact) *
-        confidenceWeight(o.confidence) *
-        (1 - novelty) *
-        driftWeight(o.targetMetric, params.primaryDriftMetric)
+      const noveltyPenaltyValue = o.evidence?.noveltyPenalty ?? 0
+      const patternPriorValue = o.evidence?.patternPrior ?? 1
 
-      return { ...o, score: Number(score.toFixed(4)) }
+      const impactW = impactWeight(o._expectedImpact)
+      const confidenceW = confidenceWeight(o.confidence)
+      const driftW = driftWeight(o.targetMetric, params.primaryDriftMetric)
+      const noveltyW = 1 - noveltyPenaltyValue
+      const patternW = patternPriorValue
+
+      const score =
+        impactW *
+        confidenceW *
+        noveltyW *
+        driftW *
+        patternW
+
+      return {
+        ...o,
+        score: Number(score.toFixed(4)),
+        evidence: {
+          ...(o.evidence ?? {}),
+          breakdown: {
+            impact: Number(impactW.toFixed(3)),
+            confidence: Number(confidenceW.toFixed(3)),
+            novelty: Number(noveltyW.toFixed(3)),
+            drift: Number(driftW.toFixed(3)),
+            pattern: Number(patternW.toFixed(3))
+          }
+        }
+      }
     })
     .sort((a, b) => b.score - a.score)
 }

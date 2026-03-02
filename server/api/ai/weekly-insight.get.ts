@@ -3,13 +3,17 @@ import { z } from 'zod'
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
 import { toWeekKey } from '~/server/lib/time/weekKey'
 
+import { requireUid } from '~/server/lib/auth/uid'
+
 const querySchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
 })
 
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)
-  if (!user) throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
+  if (!user) throw createError({ statusCode: 401 })
+
+  const uid = requireUid(user)
 
   const { date } = querySchema.parse(getQuery(event))
   const weekKey = toWeekKey(date)
@@ -19,7 +23,7 @@ export default defineEventHandler(async (event) => {
   const { data, error } = await supabase
     .from('ai_weekly_insights')
     .select('*')
-    .eq('user_id', user.id)
+    .eq('user_id', uid)
     .eq('week_key', weekKey)
     .single()
 

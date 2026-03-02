@@ -1,4 +1,4 @@
-import type { LeverPattern } from './types'
+import type { LeverPattern } from '~/server/lib/ai/types'
 
 function confW(c: string) {
   if (c === 'high') return 1.0
@@ -6,44 +6,43 @@ function confW(c: string) {
   return 0.4
 }
 
-// For stress: negative delta is good; for others: positive delta is good
-function directionGood(metricKey: string, avgDelta: number) {
+// Stress: negative delta is good. Others: positive delta is good.
+function goodDirection(metricKey: string, avgDelta: number) {
   if (metricKey === 'stress') return avgDelta < 0
   return avgDelta > 0
 }
 
 export function patternPrior(params: {
   patterns: LeverPattern[]
-  groupBy: 'lever_type' | 'lever_ref'
-  groupValue?: string // lever_ref or lever_type of the candidate option
+  groupBy: 'lever_ref' | 'lever_type'
+  groupValue?: string
   targetMetric: string
 }) {
-  if (!params.groupValue) return 1.0
+  const { patterns, groupBy, groupValue, targetMetric } = params
+  if (!groupValue) return 1.0
 
-  // Prefer patterns where metricKey == targetMetric (direct effect)
-  const direct = params.patterns.filter(p =>
-    p.groupBy === params.groupBy &&
-    p.group === params.groupValue &&
-    p.targetMetric === params.targetMetric &&
-    p.metricKey === params.targetMetric
+  // Prefer direct effects where metricKey matches targetMetric
+  const direct = patterns.filter(p =>
+    p.groupBy === groupBy &&
+    p.group === groupValue &&
+    p.targetMetric === targetMetric &&
+    p.metricKey === targetMetric
   )
 
-  // fallback to any metricKey within same targetMetric (less strong)
-  const any = params.patterns.filter(p =>
-    p.groupBy === params.groupBy &&
-    p.group === params.groupValue &&
-    p.targetMetric === params.targetMetric
+  const pool = direct.length ? direct : patterns.filter(p =>
+    p.groupBy === groupBy &&
+    p.group === groupValue &&
+    p.targetMetric === targetMetric
   )
 
-  const best = (direct.length ? direct : any)
-    .sort((a, b) => (b.n - a.n) || (Math.abs(b.avgDelta) - Math.abs(a.avgDelta)))[0]
-
+  const best = pool.sort((a, b) => (b.n - a.n) || (Math.abs(b.avgDelta) - Math.abs(a.avgDelta)))[0]
   if (!best) return 1.0
 
-  const good = directionGood(best.metricKey, best.avgDelta)
-  const strength = Math.min(0.25, 0.05 + (best.n * 0.02)) // capped deterministic boost
+  const good = goodDirection(best.metricKey, best.avgDelta)
+
+  // deterministic capped effect
+  const strength = Math.min(0.25, 0.05 + best.n * 0.02)
   const w = confW(best.confidence)
 
-  // If good: boost up to ~1.25 ; if bad: penalize down to ~0.8
-  return good ? (1.0 + strength * w) : (1.0 - strength * w)
+  return good ? (1 + strength * w) : (1 - strength * w)
 }

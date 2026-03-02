@@ -1,6 +1,7 @@
 import { defineEventHandler, getQuery, createError } from 'h3'
 import { z } from 'zod'
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
+import { requireUid } from '~/server/lib/auth/uid'
 
 const querySchema = z.object({
   days: z.coerce.number().int().min(7).max(180).default(60)
@@ -9,6 +10,8 @@ const querySchema = z.object({
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)
   if (!user) throw createError({ statusCode: 401 })
+
+  const uid = requireUid(user) // ✅ hard validated
 
   const { days } = querySchema.parse(getQuery(event))
   const supabase = await serverSupabaseClient(event)
@@ -20,14 +23,13 @@ export default defineEventHandler(async (event) => {
   const { data, error } = await supabase
     .from('experiments')
     .select('lever_ref,start_date')
-    .eq('user_id', user.id)
+    .eq('user_id', uid)              // ✅ use uid
     .not('lever_ref', 'is', null)
     .gte('start_date', sinceStr)
     .order('start_date', { ascending: false })
 
   if (error) throw createError({ statusCode: 500, statusMessage: error.message })
 
-  // return most recent date per lever_ref
   const map: Record<string, string> = {}
   for (const r of data ?? []) {
     if (!r.lever_ref) continue

@@ -66,7 +66,9 @@
             <div class="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/55">
               Option {{ idx === 0 ? 'A' : 'B' }}
               <span class="ml-2 normal-case tracking-normal text-white/35">
-                · effort: {{ o.effort }} · impact: {{ o.impact }}
+                · {{ o.ui?.badge || (o.mode === 'claim' ? 'Likely for you' : 'Idea') }}
+                · confidence: {{ o.confidence }}
+                <span v-if="o.suggestedPlan?.effort"> · effort: {{ o.suggestedPlan.effort }}</span>
               </span>
             </div>
 
@@ -74,14 +76,25 @@
               {{ o.title }}
             </div>
 
-            <p class="mt-2 text-sm leading-relaxed text-white/75">
-              {{ o.why }}
+            <p v-if="o.ui?.subtitle" class="mt-2 text-[12px] text-white/65">
+              {{ o.ui.subtitle }}
+            </p>
+
+            <ul class="mt-2 space-y-1 text-sm leading-relaxed text-white/75">
+              <li v-for="(line, i) in o.why" :key="i" class="flex gap-2">
+                <span class="mt-[6px] h-1.5 w-1.5 shrink-0 rounded-full bg-white/30" />
+                <span>{{ line }}</span>
+              </li>
+            </ul>
+
+
+            <p v-if="o.ui?.disclaimer" class="mt-2 text-[11px] text-white/45">
+              {{ o.ui.disclaimer }}
             </p>
           </div>
 
-          <span
-            class="shrink-0 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-medium text-white/70">
-            {{ o.id }}
+          <span class="shrink-0 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-medium text-white/70">
+            {{ o.ui?.badge || (o.mode === 'claim' ? 'Likely' : 'Idea') }}
           </span>
         </div>
 
@@ -107,8 +120,40 @@
           <p v-if="o.preset" class="mt-2 text-[11px] text-white/45">
             Experiment lever: {{ o.preset.leverType }} · {{ o.preset.leverRef }} → {{ o.preset.targetMetric }}
           </p>
+          <button
+            v-if="o.evidence?.breakdown"
+            class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-white/70 hover:bg-white/10"
+            @click="toggleExplain(o.id)"
+          >
+            {{ isExplainOpen(o.id) ? 'Hide' : 'Explain' }}
+          </button>
 
         </div>
+        <div
+              v-if="o.evidence?.breakdown && isExplainOpen(o.id)"
+              class="mt-3 rounded-xl border border-white/10 bg-white/5 p-3 text-[11px] text-white/60"
+            >
+              <div class="flex items-center justify-between">
+                <div class="font-semibold text-white/75">
+                  Why this is ranked {{ idx === 0 ? '#1' : '#2' }}
+                </div>
+                <div class="text-white/40">
+                  Score: <span class="text-white/70">{{ o.score }}</span>
+                </div>
+              </div>
+
+              <div class="mt-2 grid grid-cols-2 gap-x-4 gap-y-1">
+                <div>Impact ×{{ o.evidence.breakdown.impact }}</div>
+                <div>Confidence ×{{ o.evidence.breakdown.confidence }}</div>
+                <div>Drift ×{{ o.evidence.breakdown.drift }}</div>
+                <div>Pattern ×{{ o.evidence.breakdown.pattern }}</div>
+                <div>Novelty ×{{ o.evidence.breakdown.novelty }}</div>
+              </div>
+
+              <div class="mt-2 text-white/40">
+                Formula: impact × confidence × drift × pattern × novelty
+              </div>
+            </div>
       </section>
 
     </div>
@@ -135,18 +180,56 @@ type Preset = {
   baselineDays?: number
 }
 
+type InsightMode = 'explore' | 'claim'
+type ConfidenceLabel = 'low' | 'medium' | 'high'
+
 type NextFocusOption = {
   id: string
   title: string
-  why: string
-  effort: Effort
-  impact: Impact
-  preset: Preset | null
+  targetMetric: string
+  leverType: 'metric' | 'habit' | 'custom'
+  leverRef?: string
+  why: string[]
+  score: number
+  confidence: ConfidenceLabel
+  mode: InsightMode
+  evidence?: {
+    corrN?: number
+    experimentRows?: number
+    driftDelta?: number
+    noveltyPenalty?: number
+    patternPrior?: number
+    breakdown?: {
+      impact: number
+      confidence: number
+      novelty: number
+      drift: number
+      pattern: number
+    }
+  }
+  suggestedPlan?: { durationDays: number; effort: Effort | 'low' | 'moderate' | 'high' }
+  ui?: {
+    badge: 'Idea' | 'Likely for you'
+    subtitle: string
+    disclaimer?: string
+  }
+  // optional: include preset if you’re returning it from compute
+  preset?: Preset | null
 }
 
 const props = defineProps<{
   activeExperiment?: any | null
 }>()
+
+const openExplain = ref<Record<string, boolean>>({})
+
+function toggleExplain(id: string) {
+  openExplain.value[id] = !openExplain.value[id]
+}
+
+function isExplainOpen(id: string) {
+  return !!openExplain.value[id]
+}
 
 const emit = defineEmits<{
   (e: 'startPreset', preset: Preset): void
@@ -170,13 +253,6 @@ const options = ref<NextFocusOption[]>([])
 
 const hint = ref<string>('')
 
-function computeHint(meta: any) {
-  const n = meta?.topCorrelation?.n
-  if (typeof n === 'number' && n > 0 && n < 14) {
-    return `Tip: Insights get much more reliable with longer experiments (5–7 days). Right now correlations use n=${n} days of data.`
-  }
-  return 'Tip: Halo becomes much more accurate after a few 5–7 day experiments (1-day tests are mostly noise).'
-}
 
 const statusPill = computed(() => {
   if (hasActiveExperiment.value) return 'Experiment active'
@@ -186,16 +262,26 @@ const statusPill = computed(() => {
   return 'Ready'
 })
 
-const { loadNextFocus } = useNextFocusSuggestions()
-
 async function load() {
   loading.value = true
   error.value = ''
-
+  openExplain.value = {}
   try {
-    const res = await loadNextFocus({ windowDays: 60 })
-    options.value = res.options
-    hint.value = computeHint(res?.debug)// optional; remove period display if you want
+    // Compute for today. You can also call .get first, but compute is simplest for now.
+    const res = await $fetch('/api/ai/weekly-insight.compute', {
+      method: 'POST',
+      body: { date: new Date().toISOString().slice(0, 10) },
+      credentials: 'include'
+    }) as any
+
+    options.value = Array.isArray(res?.nextFocusOptions) ? res.nextFocusOptions : []
+    // Hint becomes consistent: use gate snapshot (no more correlation debug guessing)
+    const mode = res?.gate?.mode
+    hint.value =
+      mode === 'claim'
+        ? 'Tip: These suggestions are backed by enough recent data to make stronger claims.'
+        : 'Tip: You’re in exploration mode. 5–7 day experiments will unlock higher-confidence insights.'
+
   } catch (e: any) {
     error.value = e?.data?.statusMessage || e?.message || 'Could not load next focus.'
     options.value = []

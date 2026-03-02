@@ -1,6 +1,17 @@
 export type InsightMode = 'explore' | 'claim'
 export type ConfidenceLabel = 'low' | 'medium' | 'high'
 
+export type Preset = {
+  title: string
+  leverType: 'metric' | 'habit' | 'custom'
+  leverRef?: string
+  targetMetric: string
+  effortEstimate?: 'low' | 'moderate' | 'high'
+  expectedImpact?: 'low' | 'moderate' | 'high'
+  recommendedDays?: number
+  baselineDays?: number
+}
+
 export type GateResult = {
   mode: InsightMode
   canClaim: boolean
@@ -21,6 +32,7 @@ export type NextFocusOption = {
   targetMetric: string
   leverType: 'metric' | 'habit' | 'custom'
   leverRef?: string
+  preset?: Preset
   why: string[]
   score: number
   confidence: ConfidenceLabel
@@ -30,6 +42,20 @@ export type NextFocusOption = {
     experimentRows?: number
     driftDelta?: number
     noveltyPenalty?: number
+    patternPrior?: number
+
+    breakdown?: {
+      impact: number
+      confidence: number
+      novelty: number
+      drift: number
+      pattern: number
+    }
+  }
+  ui?: {
+    badge: 'Idea' | 'Likely for you'
+    subtitle: string
+    disclaimer?: string
   }
   suggestedPlan?: { durationDays: number; effort: 'low' | 'moderate' | 'high' }
 }
