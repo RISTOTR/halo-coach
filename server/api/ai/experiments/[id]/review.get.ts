@@ -210,7 +210,6 @@ export default defineEventHandler(async (event): Promise<ExperimentReviewDTO> =>
       n_baseline: Number(row.baseline_rows ?? 0),
       n_experiment: Number(row.experiment_rows ?? 0)
     }
-    console.log('effectsRow', row)
   }
 
 

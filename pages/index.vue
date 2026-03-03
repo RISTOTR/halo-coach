@@ -186,7 +186,7 @@
 
       <!-- RIGHT COLUMN (1/3): Insight (controlled height) -->
       <div class="lg:col-span-1">
-        <div class="lg:sticky lg:top-24 h-[calc(100vh-25rem)]">
+        <div class="lg:sticky lg:top-24 h-[calc(100vh-20rem)]">
           <DailyInsightCard :collapsed="true" :max-paragraphs="2" class="h-full" :loading="aiLoading" :error="errors.ai"
             :ai-summary="aiSummary" :metrics="metrics" />
         </div>

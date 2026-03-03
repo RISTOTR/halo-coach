@@ -107,17 +107,15 @@
 
           <!-- Preview with fade -->
           <div class="relative mt-2">
-            <div  ref="previewEl" class="space-y-2 text-sm leading-relaxed text-slate-200"
+            <div ref="previewEl" class="space-y-2 text-sm leading-relaxed text-slate-200"
               :class="isCollapsed ? 'max-h-40 overflow-hidden' : 'max-h-64 overflow-auto pr-1'">
               <p v-for="(p, idx) in previewParagraphs" :key="idx">
                 {{ p }}
               </p>
             </div>
 
-            <div
-  v-if="isCollapsed && (hasOverflow || paragraphs.length > previewParagraphs.length)"
-  class="pointer-events-none absolute bottom-0 left-0 h-10 w-full bg-gradient-to-t from-slate-950/95 to-transparent"
-/>
+            <div v-if="isCollapsed && (hasOverflow || paragraphs.length > previewParagraphs.length)"
+              class="pointer-events-none absolute bottom-0 left-0 h-10 w-full bg-gradient-to-t from-slate-950/95 to-transparent" />
 
           </div>
 

@@ -3,7 +3,7 @@ import type { Preset } from './buildCandidates'
 export const PRESETS: Preset[] = [
   {
     title: 'Sleep consistency (same bedtime)',
-    leverType: 'habit',
+    leverType: 'custom',
     leverRef: 'sleep_consistency',
     targetMetric: 'sleep_hours',
     effortEstimate: 'low',
@@ -13,7 +13,7 @@ export const PRESETS: Preset[] = [
   },
   {
     title: 'Daily decompression (10 min)',
-    leverType: 'habit',
+    leverType: 'custom',
     leverRef: 'decompression_10m',
     targetMetric: 'stress',
     effortEstimate: 'moderate',
@@ -23,7 +23,7 @@ export const PRESETS: Preset[] = [
   },
   {
     title: 'Outdoor walk (15–20 min)',
-    leverType: 'habit',
+    leverType: 'custom',
     leverRef: 'outdoor_walk_20m',
     targetMetric: 'outdoor_minutes',
     effortEstimate: 'low',
