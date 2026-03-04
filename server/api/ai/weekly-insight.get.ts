@@ -1,7 +1,7 @@
 import { defineEventHandler, getQuery, createError } from 'h3'
 import { z } from 'zod'
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
-import { toWeekKey } from '../../lib/time/weekKey'
+import { toWeekKey } from '~/server/lib/time/weekKey'
 import { requireUid } from '../../lib/auth/uid'
 
 const querySchema = z.object({
