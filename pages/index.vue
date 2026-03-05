@@ -129,7 +129,6 @@
           </div>
         </section>
 
-        <!-- Patterns (move here) -->
         <!-- Patterns -->
         <section
           class="rounded-2xl border border-white/10 bg-slate-950/60 px-5 py-5 lg:px-6 lg:py-6 shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
@@ -192,6 +191,8 @@
         </div>
       </div>
     </section>
+
+    <WhatWorksCard class="mt-4" />
 
     <ExperimentInProgressCard
   :exp="expFlow.ctx.value.activeExperiment"
@@ -285,6 +286,8 @@ import WeeklyGoalsCard from '~/components/dashboard/WeeklyGoalsCard.vue'
 import NextFocusCard from '~/components/dashboard/NextFocusCard.vue'
 import ExperimentInProgressCard from '~/components/experiments/ExperimentInProgressCard.vue'
 import ExperimentDialog from '~/components/ExperimentDialog.vue'
+import WhatWorksCard from '~/components/dashboard/WhatWorksCard.vue'
+
 
 
 type MetricPoint = { time: number; value: number }
