@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="360" viewBox="0 0 960 360" role="img" aria-labelledby="title desc">
+  <title id="title">Halo architecture</title>
+  <desc id="desc">The Nuxt and Vue interface connects to the Supabase browser client and Nitro API routes. Both access Supabase Auth and PostgreSQL. Nitro also runs deterministic analysis and ranking and calls OpenAI for reflection generation.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/>
+    </marker>
+  </defs>
+  <rect width="960" height="360" rx="16" fill="#0f172a"/>
+  <g fill="none" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrow)">
+    <path d="M 250 180 H 285 V 75 H 320"/>
+    <path d="M 250 180 H 285 V 225 H 320"/>
+    <path d="M 560 75 H 650"/>
+    <path d="M 560 225 H 600 V 75 H 650"/>
+    <path d="M 560 225 H 620 V 180 H 650"/>
+    <path d="M 560 225 H 600 V 285 H 650"/>
+  </g>
+  <g fill="#1e293b" stroke="#64748b" stroke-width="1.5">
+    <rect x="30" y="145" width="220" height="70" rx="10"/>
+    <rect x="320" y="40" width="240" height="70" rx="10"/>
+    <rect x="320" y="190" width="240" height="70" rx="10"/>
+    <rect x="650" y="40" width="280" height="70" rx="10"/>
+    <rect x="650" y="145" width="280" height="70" rx="10"/>
+    <rect x="650" y="250" width="280" height="70" rx="10"/>
+  </g>
+  <g fill="#f1f5f9" font-family="system-ui, -apple-system, sans-serif" font-size="17" text-anchor="middle">
+    <text x="140" y="176">Nuxt / Vue<tspan x="140" dy="24">interface</tspan></text>
+    <text x="440" y="71">Supabase<tspan x="440" dy="24">browser client</tspan></text>
+    <text x="440" y="231">Nitro API routes</text>
+    <text x="790" y="71">Supabase Auth<tspan x="790" dy="24">PostgreSQL</tspan></text>
+    <text x="790" y="176">Deterministic analysis<tspan x="790" dy="24">and ranking</tspan></text>
+    <text x="790" y="281">OpenAI<tspan x="790" dy="24">reflection generation</tspan></text>
+  </g>
+</svg>

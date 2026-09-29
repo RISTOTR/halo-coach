@@ -64,6 +64,9 @@ Nuxt 4 · Vue 3 · TypeScript · Tailwind CSS · Supabase Auth · PostgreSQL / S
 
 ## Architecture
 
+![Halo architecture: Nuxt and Vue connect to Supabase and Nitro; Nitro coordinates persistence, deterministic analysis and OpenAI reflections.](docs/images/architecture.svg)
+
+<!-- Mermaid source retained for editing. The SVG above avoids a dependency on GitHub's Mermaid renderer.
 ```mermaid
 flowchart LR
     UI[Nuxt / Vue interface] --> Browser[Supabase browser client]
@@ -73,6 +76,7 @@ flowchart LR
     API --> Analysis[Deterministic analysis and ranking]
     API --> AI[OpenAI reflection generation]
 ```
+-->
 
 The browser client handles simple user-owned data operations. Authenticated Nitro routes orchestrate reports, experiment transitions, analysis and AI generation. Shared experiment state lives in Nuxt `useState`; database policies govern access to persisted data.
 
