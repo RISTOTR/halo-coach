@@ -19,7 +19,7 @@
         class="flex items-center gap-2 group"
       >
         <img
-          src="/public/Halo_logo3.png"
+          src="/Halo_logo3.png"
           alt="Halo logo"
           class="h-8 w-8 my-2 mx-2 rounded-lg shadow-md shadow-emerald-500/20 group-hover:scale-105 transition-transform"
         >
@@ -71,6 +71,7 @@
   @close="handleModalClose"
 />
 
+    <p v-if="onboardingError" role="status" class="mb-3 text-xs text-slate-300">{{ onboardingError }}</p>
     <slot />
   </div>
       </main>
@@ -83,7 +84,7 @@ import OnboardingModal from '~/components/OnboardingModal.vue'
 import { useOnboarding } from '~/composables/useOnboarding'
 import { useOnboardingModal } from '~/composables/useOnboardingModal'
 
-const { showOnboarding, loadOnboardingStatus, completeOnboarding } = useOnboarding()
+const { showOnboarding, errorMessage: onboardingError, loadOnboardingStatus, completeOnboarding } = useOnboarding()
 const { isOpen: manualOpen, close: closeManual } = useOnboardingModal()
 
 const user = useSupabaseUser()
@@ -113,4 +114,3 @@ onMounted(async () => {
   loading.value = false
 })
 </script>
-

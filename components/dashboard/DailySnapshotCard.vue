@@ -55,14 +55,14 @@
               Energy
             </p>
             <p class="text-lg font-semibold text-white">
-              {{ energyScore }}
-              <span class="text-[11px] font-normal text-white/45">/ 5</span>
+              {{ energyScore ?? 'Not logged' }}
+              <span v-if="energyScore != null" class="text-[11px] font-normal text-white/45">/ 5</span>
             </p>
           </div>
         </div>
 
         <!-- Small bar for energy -->
-        <div class="mt-3 h-1.5 w-full rounded-full bg-slate-900/70">
+        <div v-if="energyPercent != null" class="mt-3 h-1.5 w-full rounded-full bg-slate-900/70">
           <div
             class="h-full rounded-full bg-emerald-400"
             :style="{ width: `${energyPercent}%` }"
@@ -79,14 +79,8 @@
               Sleep
             </p>
             <p class="text-sm text-white">
-              {{ sleepHours.toFixed(1) }} h
+              {{ sleepHours == null ? 'Not logged' : `${sleepHours.toFixed(1)} h` }}
             </p>
-          </div>
-          <div class="text-right text-xs text-white/50">
-            Quality
-            <span class="ml-1 font-medium text-white">
-              {{ sleepQuality }}%
-            </span>
           </div>
         </div>
 
@@ -100,7 +94,7 @@
               {{ stressText }}
             </p>
           </div>
-          <div class="flex gap-1.5">
+          <div v-if="stressLevel != null" class="flex gap-1.5">
             <span
               v-for="n in 5"
               :key="n"
@@ -117,10 +111,10 @@
               Habits
             </p>
             <p class="text-sm text-white">
-              {{ habitsCompleted }} / {{ habitsTotal }} completed
+              {{ habitsCompleted == null || habitsTotal == null ? 'Not loaded' : `${habitsCompleted} / ${habitsTotal} completed` }}
             </p>
           </div>
-          <div class="text-right text-xs text-white/50">
+          <div v-if="habitsPercent != null" class="text-right text-xs text-white/50">
             {{ habitsPercent }}%
             <span class="ml-1 text-white/40">for today</span>
           </div>
@@ -131,33 +125,24 @@
 </template>
 
 <script setup lang="ts">
-import { computed, withDefaults } from 'vue'
+import { computed } from 'vue'
 
 interface Props {
   label?: string
   /** 1–5 */
-  moodScore?: number
+  moodScore?: number | null
   /** 1–5 */
-  energyScore?: number
+  energyScore?: number | null
   /** horas de sueño */
-  sleepHours?: number
-  /** 0–100 */
-  sleepQuality?: number
+  sleepHours?: number | null
   /** 1–5 */
-  stressLevel?: number
-  habitsCompleted?: number
-  habitsTotal?: number
+  stressLevel?: number | null
+  habitsCompleted?: number | null
+  habitsTotal?: number | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  label: "Today’s snapshot",
-  moodScore: 4,
-  energyScore: 4,
-  sleepHours: 7.2,
-  sleepQuality: 82,
-  stressLevel: 2,
-  habitsCompleted: 3,
-  habitsTotal: 5
+  label: "Today’s snapshot"
 })
 
 const formattedDate = computed(() => {
@@ -169,6 +154,7 @@ const formattedDate = computed(() => {
 })
 
 const dayLabel = computed(() => {
+  if (props.habitsCompleted == null || props.habitsTotal == null) return 'Today'
   const ratio =
     props.habitsTotal && props.habitsTotal > 0
       ? props.habitsCompleted / props.habitsTotal
@@ -180,7 +166,8 @@ const dayLabel = computed(() => {
 })
 
 const moodEmoji = computed(() => {
-  const score = props.moodScore ?? 3
+  const score = props.moodScore
+  if (score == null) return '—'
   if (score >= 5) return '🤩'
   if (score >= 4) return '😊'
   if (score >= 3) return '😌'
@@ -189,7 +176,8 @@ const moodEmoji = computed(() => {
 })
 
 const moodText = computed(() => {
-  const score = props.moodScore ?? 3
+  const score = props.moodScore
+  if (score == null) return 'Not logged'
   if (score >= 5) return 'Excellent'
   if (score >= 4) return 'Good'
   if (score >= 3) return 'Neutral'
@@ -198,19 +186,22 @@ const moodText = computed(() => {
 })
 
 const moodHeadline = computed(() => {
-  const score = props.moodScore ?? 3
+  const score = props.moodScore
+  if (score == null) return 'Your logged measurements for today.'
   if (score >= 4) return 'Today feels fairly balanced, with room to adjust as you go.'
   if (score >= 3) return 'A steady day with space to adjust.'
   return 'A gentler day — go slow and be kind to yourself.'
 })
 
 const energyPercent = computed(() => {
-  const score = props.energyScore ?? 3
+  const score = props.energyScore
+  if (score == null) return null
   return (score / 5) * 100
 })
 
 const stressText = computed(() => {
-  const level = props.stressLevel ?? 2
+  const level = props.stressLevel
+  if (level == null) return 'Not logged'
   if (level <= 1) return 'Very low'
   if (level === 2) return 'Low'
   if (level === 3) return 'Moderate'
@@ -219,7 +210,7 @@ const stressText = computed(() => {
 })
 
 const habitsPercent = computed(() => {
-  if (!props.habitsTotal) return 0
+  if (!props.habitsTotal || props.habitsCompleted == null) return null
   return Math.round((props.habitsCompleted / props.habitsTotal) * 100)
 })
 

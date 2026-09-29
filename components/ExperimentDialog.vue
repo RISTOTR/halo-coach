@@ -3,7 +3,7 @@
     <div class="absolute inset-0 bg-black/60" @click="close" />
 
     <div class="absolute left-1/2 top-1/2 w-[92vw] max-w-xl -translate-x-1/2 -translate-y-1/2">
-      <div class="rounded-2xl border border-white/10 bg-slate-950/90 shadow-[0_25px_80px_rgba(0,0,0,0.65)]">
+      <div class="max-h-[90dvh] overflow-y-auto rounded-2xl border border-white/10 bg-slate-950/90 shadow-[0_25px_80px_rgba(0,0,0,0.65)]">
         <div class="px-5 py-4 border-b border-white/10 flex items-start justify-between gap-3">
           <div>
             <p class="text-[11px] uppercase tracking-[0.22em] text-white/50">Experiment</p>

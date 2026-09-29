@@ -75,15 +75,15 @@
         <div v-if="hasMetrics" class="grid grid-cols-3 gap-2">
           <div class="rounded-xl border border-white/10 bg-black/10 p-2.5">
             <div class="text-[10px] text-white/50">Mood</div>
-            <div class="mt-1 text-sm font-semibold text-white/90">{{ metrics!.mood }}</div>
+            <div class="mt-1 text-sm font-semibold text-white/90">{{ metrics!.mood ?? 'Not logged' }}</div>
           </div>
           <div class="rounded-xl border border-white/10 bg-black/10 p-2.5">
             <div class="text-[10px] text-white/50">Energy</div>
-            <div class="mt-1 text-sm font-semibold text-white/90">{{ metrics!.energy }}</div>
+            <div class="mt-1 text-sm font-semibold text-white/90">{{ metrics!.energy ?? 'Not logged' }}</div>
           </div>
           <div class="rounded-xl border border-white/10 bg-black/10 p-2.5">
             <div class="text-[10px] text-white/50">Stress</div>
-            <div class="mt-1 text-sm font-semibold text-white/90">{{ metrics!.stress }}</div>
+            <div class="mt-1 text-sm font-semibold text-white/90">{{ metrics!.stress ?? 'Not logged' }}</div>
           </div>
         </div>
 
@@ -109,9 +109,7 @@
           <div class="relative mt-2">
             <div ref="previewEl" class="space-y-2 text-sm leading-relaxed text-slate-200"
               :class="isCollapsed ? 'max-h-40 overflow-hidden' : 'max-h-64 overflow-auto pr-1'">
-              <p v-for="(p, idx) in previewParagraphs" :key="idx">
-                {{ p }}
-              </p>
+              <SafeMarkdown :content="previewParagraphs.join('\n\n')" />
             </div>
 
             <div v-if="isCollapsed && (hasOverflow || paragraphs.length > previewParagraphs.length)"
@@ -131,18 +129,6 @@
           </div>
         </div>
 
-        <div class="mt-3 flex items-center justify-between rounded-xl border border-white/10 bg-black/10 p-3">
-          <div>
-            <div class="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">Quick reset</div>
-            <div class="mt-1 text-xs text-white/55">60s slow exhale breathing.</div>
-          </div>
-          <button
-            class="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/80 hover:bg-white/10">
-            Start
-          </button>
-        </div>
-
-
         <!-- Always visible action -->
         <div class="rounded-xl border border-white/10 bg-slate-900/40 p-3">
           <div class="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/55">
@@ -155,15 +141,15 @@
         <div v-if="hasMetrics" class="grid grid-cols-3 gap-2">
           <div class="rounded-xl border border-white/10 bg-black/10 p-2.5">
             <div class="text-[10px] text-white/50">Mood</div>
-            <div class="mt-1 text-sm font-semibold text-white/90">{{ metrics!.mood }}</div>
+            <div class="mt-1 text-sm font-semibold text-white/90">{{ metrics!.mood ?? 'Not logged' }}</div>
           </div>
           <div class="rounded-xl border border-white/10 bg-black/10 p-2.5">
             <div class="text-[10px] text-white/50">Energy</div>
-            <div class="mt-1 text-sm font-semibold text-white/90">{{ metrics!.energy }}</div>
+            <div class="mt-1 text-sm font-semibold text-white/90">{{ metrics!.energy ?? 'Not logged' }}</div>
           </div>
           <div class="rounded-xl border border-white/10 bg-black/10 p-2.5">
             <div class="text-[10px] text-white/50">Stress</div>
-            <div class="mt-1 text-sm font-semibold text-white/90">{{ metrics!.stress }}</div>
+            <div class="mt-1 text-sm font-semibold text-white/90">{{ metrics!.stress ?? 'Not logged' }}</div>
           </div>
         </div>
 
@@ -197,9 +183,7 @@
 
           <div class="max-h-[70vh] overflow-auto px-5 py-4">
             <div class="space-y-3 text-sm leading-relaxed text-slate-200">
-              <p v-for="(p, idx) in paragraphs" :key="idx">
-                {{ p }}
-              </p>
+              <SafeMarkdown :content="paragraphs.join('\n\n')" />
             </div>
 
             <div v-if="measuredLine"
@@ -225,15 +209,15 @@
             <div v-if="hasMetrics" class="mt-4 grid grid-cols-3 gap-2">
               <div class="rounded-xl border border-white/10 bg-black/10 p-2.5">
                 <div class="text-[10px] text-white/50">Mood</div>
-                <div class="mt-1 text-sm font-semibold text-white/90">{{ metrics!.mood }}</div>
+                <div class="mt-1 text-sm font-semibold text-white/90">{{ metrics!.mood ?? 'Not logged' }}</div>
               </div>
               <div class="rounded-xl border border-white/10 bg-black/10 p-2.5">
                 <div class="text-[10px] text-white/50">Energy</div>
-                <div class="mt-1 text-sm font-semibold text-white/90">{{ metrics!.energy }}</div>
+                <div class="mt-1 text-sm font-semibold text-white/90">{{ metrics!.energy ?? 'Not logged' }}</div>
               </div>
               <div class="rounded-xl border border-white/10 bg-black/10 p-2.5">
                 <div class="text-[10px] text-white/50">Stress</div>
-                <div class="mt-1 text-sm font-semibold text-white/90">{{ metrics!.stress }}</div>
+                <div class="mt-1 text-sm font-semibold text-white/90">{{ metrics!.stress ?? 'Not logged' }}</div>
               </div>
             </div>
 
@@ -249,10 +233,10 @@
 import { computed, ref, watch, nextTick } from 'vue'
 
 type Metrics = {
-  mood: number
-  energy: number
-  stress: number
-  sleep_hours: number
+  mood: number | null
+  energy: number | null
+  stress: number | null
+  sleep_hours: number | null
   sleep_quality?: number | null
 }
 
@@ -331,15 +315,15 @@ const nextTinyAction = computed(() => {
   const m = props.metrics
   if (!m) return 'Take 2 minutes to breathe and just notice how you feel — no fixing needed.'
 
-  const mood = clamp(m.mood ?? 0, 0, 10)
-  const energy = clamp(m.energy ?? 0, 0, 10)
-  const stress = clamp(m.stress ?? 0, 0, 10)
-  const sleep = Number(m.sleep_hours ?? 0)
+  const mood = m.mood == null ? null : clamp(m.mood, 0, 10)
+  const energy = m.energy == null ? null : clamp(m.energy, 0, 10)
+  const stress = m.stress == null ? null : clamp(m.stress, 0, 10)
+  const sleep = m.sleep_hours
 
-  if (stress >= 7) return 'Do a 90-second “downshift”: slow exhale breathing (inhale 4s, exhale 6s).'
-  if (sleep > 0 && sleep < 6) return 'Protect tonight: set a “screens down” moment 15 minutes earlier.'
-  if (mood <= 3 && energy <= 4) return 'Keep it gentle: step outside for 5 minutes, no phone, just air + light.'
-  if (energy >= 7 && mood >= 6 && stress <= 4) return 'Ride the wave: do one meaningful 20-minute block (walk, workout, or focused work).'
+  if (stress != null && stress >= 7) return 'Do a 90-second “downshift”: slow exhale breathing (inhale 4s, exhale 6s).'
+  if (sleep != null && sleep > 0 && sleep < 6) return 'Protect tonight: set a “screens down” moment 15 minutes earlier.'
+  if (mood != null && energy != null && mood <= 3 && energy <= 4) return 'Keep it gentle: step outside for 5 minutes, no phone, just air + light.'
+  if (energy != null && mood != null && stress != null && energy >= 7 && mood >= 6 && stress <= 4) return 'Ride the wave: do one meaningful 20-minute block (walk, workout, or focused work).'
   return 'Pick one habit you can “win” today in under 5 minutes — tiny counts.'
 })
 
@@ -347,21 +331,21 @@ const fallbackNudge = computed(() => {
   const m = props.metrics
   if (!m) return 'Complete your check-in to get a reflection.'
 
-  const mood = clamp(m.mood ?? 0, 0, 10)
-  const energy = clamp(m.energy ?? 0, 0, 10)
-  const stress = clamp(m.stress ?? 0, 0, 10)
-  const sleep = Number(m.sleep_hours ?? 0)
+  const mood = m.mood == null ? null : clamp(m.mood, 0, 10)
+  const energy = m.energy == null ? null : clamp(m.energy, 0, 10)
+  const stress = m.stress == null ? null : clamp(m.stress, 0, 10)
+  const sleep = m.sleep_hours
 
-  if (stress >= 7 && sleep > 0 && sleep < 6) {
+  if (stress != null && sleep != null && stress >= 7 && sleep > 0 && sleep < 6) {
     return 'Today looks a bit loaded: higher stress and short sleep. Keep expectations soft — focus on the basics (food, water, movement) and one small win.'
   }
-  if (mood <= 3) {
+  if (mood != null && mood <= 3) {
     return 'Low mood days are real. The goal isn’t intensity — it’s care. A tiny routine (walk + water + 2 minutes of breathing) is progress.'
   }
-  if (energy >= 7 && mood >= 6) {
+  if (energy != null && mood != null && energy >= 7 && mood >= 6) {
     return 'You’ve got good momentum today. Use it gently: one focused task + one body-supporting habit can make the day feel “complete.”'
   }
-  if (sleep >= 7 && stress <= 4) {
+  if (sleep != null && stress != null && sleep >= 7 && stress <= 4) {
     return 'Solid foundation today. Keep it simple: maintain what’s working and avoid over-optimizing.'
   }
   return 'You’re showing up. Keep it small and consistent — consistency beats intensity.'

@@ -286,7 +286,7 @@
               prose-strong:text-slate-100 prose-strong:font-semibold
               prose-em:text-slate-200"
           >
-            <div v-html="renderedAiContent" />
+            <SafeMarkdown :content="aiContent" />
           </div>
 
           <div v-else class="mt-3 text-[11px] text-slate-500">
@@ -300,7 +300,6 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import { marked } from 'marked'
 import ExperimentDialog from '~/components/ExperimentDialog.vue'
 import ExperimentStartDialog from '~/components/ExperimentStartDialog.vue'
 import { useExperimentFlow } from '~/composables/useExperimentFlow'
@@ -353,7 +352,6 @@ const habitsSummary = computed(() => {
 /* AI */
 const aiContent = ref('')
 const loadingAi = ref(false)
-const renderedAiContent = computed(() => (aiContent.value ? marked.parse(aiContent.value) : ''))
 
 /* UI */
 const saving = ref(false)

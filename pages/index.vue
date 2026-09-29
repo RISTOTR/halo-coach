@@ -27,13 +27,16 @@
             <span class="font-medium text-emerald-200">✓</span>
             Daily check-in ready
           </div>
-          <div class="rounded-full border border-white/10 bg-black/10 px-3 py-1.5">
-            AI insights enabled
-          </div>
         </div>
       </div>
     </section>
 
+    <p v-if="!uid" class="text-sm text-slate-300">
+      Sign in to view your check-ins, habits and reflections.
+      <NuxtLink to="/auth" class="ml-1 text-emerald-300 hover:underline">Sign in →</NuxtLink>
+    </p>
+
+    <template v-else>
     <!-- Row 1: Snapshot + Insight -->
     <section class="grid gap-6 lg:grid-cols-3 lg:items-stretch">
       <!-- LEFT COLUMN (2/3): Snapshot + Habits + Patterns -->
@@ -52,8 +55,10 @@
           </div>
 
           <DailySnapshotCard v-else :mood-score="metrics.mood" :energy-score="metrics.energy"
-            :sleep-hours="metrics.sleep_hours" :sleep-quality="metrics.sleep_quality || 0"
-            :stress-level="metrics.stress" :habits-completed="completedHabitsCount" :habits-total="todayHabitsCount" />
+            :sleep-hours="metrics.sleep_hours"
+            :stress-level="metrics.stress"
+            :habits-completed="habitsLoading || errors.habits ? null : completedHabitsCount"
+            :habits-total="habitsLoading || errors.habits ? null : todayHabitsCount" />
         </div>
 
         <!-- Habits (move here) -->
@@ -273,6 +278,7 @@
 
     <WeeklyGoalsCard />
     <WeeklyAiReportCard />
+    </template>
   </div>
 </template>
 
@@ -290,15 +296,15 @@ import WhatWorksCard from '~/components/dashboard/WhatWorksCard.vue'
 
 
 
-type MetricPoint = { time: number; value: number }
+type MetricPoint = { time: number; value: number | null }
+type Preset = Parameters<ReturnType<typeof useExperimentFlow>['startFromPreset']>[0]
 
 type DailyMetricsRow = {
   date: string
-  mood: number
-  energy: number
-  stress: number
-  sleep_hours: number
-  sleep_quality?: number | null
+  mood: number | null
+  energy: number | null
+  stress: number | null
+  sleep_hours: number | null
 }
 
 const supabase = useSupabaseClient()
@@ -338,7 +344,7 @@ const aiLoading = ref(true)
 // Optional: lightweight per-section errors (useful for debugging / banners)
 const errors = ref<{ today?: string; habits?: string; trends?: string; ai?: string }>({})
 
-const uid = (user.value as any)?.id || (user.value as any)?.sub
+const uid = computed(() => user.value?.sub || (user.value as { id?: string } | null)?.id || null)
 
 const completedHabitsCount = computed(() =>
   habits.value.filter((h) => h.completed_today).length
@@ -546,7 +552,7 @@ async function confirmReplace() {
 
 
 async function loadAll() {
-  let id = uid
+  const id = uid.value
   if (!id) {
     // Reset state for logged-out / not-ready sessions
     metrics.value = null
@@ -572,18 +578,10 @@ async function loadAll() {
   ])
 }
 
-onMounted(async () => {
+onMounted(() => {
+  // app.vue remounts this page on owner changes, isolating in-flight local reads.
   loadAll()
-  await expFlow.loadActive()
+  if (uid.value) expFlow.loadActive()
 })
-
-
-watch(
-  () => uid.value,
-  (newUid) => {
-    if (newUid) loadAll()
-  },
-  { immediate: true }
-)
 
 </script>

@@ -93,7 +93,7 @@
 
           </TrendCard>
 
-          <TrendCard title="Mood" hint="Your 1–10 scale">
+          <TrendCard title="Mood" hint="Your 1–5 scale">
             <template v-if="compact(report.series.mood).length > 1">
               <MiniSparkline :points="compact(report.series.mood)" class="h-16 w-full" />
             </template>
@@ -113,7 +113,7 @@
 
           </TrendCard>
 
-          <TrendCard title="Energy" hint="Your 1–10 scale">
+          <TrendCard title="Energy" hint="Your 1–5 scale">
             <template v-if="compact(report.series.energy).length > 1">
               <MiniSparkline :points="compact(report.series.energy)" class="h-16 w-full" />
             </template>
@@ -246,14 +246,6 @@
       </section>
 
 
-      <!-- Teaser: insights -->
-      <section class="rounded-2xl border border-white/10 bg-slate-950/50 px-5 py-5 lg:px-6 lg:py-6">
-        <h2 class="text-base font-semibold text-slate-100">Next</h2>
-        <p class="mt-1 text-sm text-white/60">
-          Tomorrow we can add correlations (sleep → mood, habits → stress) and a weekly “what worked” insight that’s
-          truly data-backed.
-        </p>
-      </section>
     </template>
   </div>
 </template>

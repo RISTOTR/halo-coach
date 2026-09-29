@@ -74,6 +74,7 @@ export function useExperimentFlow() {
 
   // Prevent “double load” races (two components calling loadActive at same time)
   const loadSeq = useState<number>('exp:loadSeq', () => 0)
+  const sessionVersion = useState<number>('exp:sessionVersion', () => 0)
 
   function resetTransient(keepEndDate = true) {
   const prevEnd = ctx.value.endDate
@@ -117,6 +118,7 @@ export function useExperimentFlow() {
   }
 
   async function endExperiment() {
+    const session = sessionVersion.value
     const exp = ctx.value.reviewExperiment || ctx.value.activeExperiment
     if (!exp?.id) return
 
@@ -132,20 +134,24 @@ export function useExperimentFlow() {
         method: 'POST',
         body: { endDate }
       })
+      if (session !== sessionVersion.value) return
 
       const reviewDto = await $fetch(`/api/ai/experiments/${id}/review`, { method: 'GET' }) as any
+      if (session !== sessionVersion.value) return
       ctx.value.reviewDto = reviewDto
 
       ctx.value.activeExperiment = null
       ctx.value.reviewExperiment = null
       state.value = 'subjective'
     } catch (e: any) {
+      if (session !== sessionVersion.value) return
       ctx.value.error = { message: e?.data?.statusMessage || e?.message || 'Failed to end experiment' }
       state.value = 'error'
     }
   }
 
   async function continueExperiment() {
+    const session = sessionVersion.value
     // Continue only makes sense for an ACTIVE experiment
     if (!ctx.value.activeExperiment?.id) {
       state.value = 'ready'
@@ -155,16 +161,19 @@ export function useExperimentFlow() {
     try {
       const id = ctx.value.activeExperiment.id
       const res = await $fetch(`/api/ai/experiments/${id}/resume`, { method: 'POST' }) as any
+      if (session !== sessionVersion.value) return
       ctx.value.activeExperiment = res?.experiment ?? ctx.value.activeExperiment
       ctx.value.insufficient = null
       state.value = 'ready'
     } catch (e: any) {
+      if (session !== sessionVersion.value) return
       ctx.value.error = { message: e?.data?.statusMessage || e?.message || 'Failed to resume experiment' }
       state.value = 'error'
     }
   }
 
   async function startFromPreset(preset: Preset, replaceActive = false) {
+    const session = sessionVersion.value
     state.value = 'starting'
     ctx.value.error = null
 
@@ -184,13 +193,15 @@ export function useExperimentFlow() {
         }
       })
 
+      if (session !== sessionVersion.value) return
       // A new experiment started: clear any pending review context
       ctx.value.reviewExperiment = null
       await loadActive()
-
+      if (session !== sessionVersion.value) return
       state.value = 'ready'
       return res
     } catch (e: any) {
+      if (session !== sessionVersion.value) return
       const status = e?.status || e?.data?.statusCode
       if (status === 409) {
         state.value = 'active_exists'
@@ -208,10 +219,13 @@ export function useExperimentFlow() {
   }
 
   function close() {
+    // Invalidate old-account requests before resetting shared state.
+    sessionVersion.value++
+    loadSeq.value++
     state.value = 'idle'
     ctx.value.activeExperiment = null
     ctx.value.reviewExperiment = null
-    resetTransient()
+    resetTransient(false)
   }
 
   function dismiss() {
@@ -222,6 +236,7 @@ export function useExperimentFlow() {
   }
 
   async function openReviewById(id: string) {
+  const session = sessionVersion.value
   if (!id) return
   state.value = 'loading_review'
   ctx.value.error = null
@@ -229,9 +244,11 @@ export function useExperimentFlow() {
 
   try {
     const reviewDto = await $fetch(`/api/ai/experiments/${id}/review`, { method: 'GET' }) as any
+    if (session !== sessionVersion.value) return
     ctx.value.reviewDto = reviewDto
     state.value = 'review'
   } catch (e: any) {
+    if (session !== sessionVersion.value) return
     ctx.value.error = { message: e?.data?.statusMessage || e?.message || 'Failed to load review' }
     state.value = 'error'
   }
@@ -239,6 +256,7 @@ export function useExperimentFlow() {
 
 
   async function finalizeReview(payload: { whatWorked?: string[]; tryNext?: string[] } = {}) {
+    const session = sessionVersion.value
     const dto = ctx.value.reviewDto
     const id = dto?.id
     if (!id) return
@@ -256,15 +274,17 @@ export function useExperimentFlow() {
           subjectiveNote: ctx.value.subjectiveNote?.trim() ? ctx.value.subjectiveNote.trim() : undefined
         }
       }) as any
-
+      if (session !== sessionVersion.value) return
       if (ctx.value.reviewDto?.outcome) {
         ctx.value.reviewDto.outcome.whatWorked = payload.whatWorked ?? ctx.value.reviewDto.outcome.whatWorked
         ctx.value.reviewDto.outcome.tryNext = payload.tryNext ?? ctx.value.reviewDto.outcome.tryNext
         ctx.value.reviewDto.status = res?.experiment?.status || 'completed'
       }
       await loadActive()
+      if (session !== sessionVersion.value) return
       state.value = 'next_focus'
     } catch (e: any) {
+      if (session !== sessionVersion.value) return
       ctx.value.error = { message: e?.data?.statusMessage || e?.message || 'Failed to finalize review' }
       state.value = 'error'
     }
