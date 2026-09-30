@@ -1,9 +1,9 @@
 <template>
-  <div v-if="modelValue" class="fixed inset-0 z-50">
+  <div v-if="modelValue" class="fixed inset-0 z-50 flex items-center justify-center p-4 [overflow-wrap:anywhere]">
     <div class="absolute inset-0 bg-black/60" @click="close" />
 
-    <div class="absolute left-1/2 top-1/2 w-[92vw] max-w-xl -translate-x-1/2 -translate-y-1/2">
-      <div class="max-h-[90dvh] overflow-y-auto rounded-2xl border border-white/10 bg-slate-950/90 shadow-[0_25px_80px_rgba(0,0,0,0.65)]">
+    <div class="relative w-full min-w-0 max-w-xl" role="dialog" aria-modal="true" aria-label="Experiment">
+      <div class="max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain rounded-2xl border border-white/10 bg-slate-950/90 shadow-[0_25px_80px_rgba(0,0,0,0.65)]">
         <div class="px-5 py-4 border-b border-white/10 flex items-start justify-between gap-3">
           <div>
             <p class="text-[11px] uppercase tracking-[0.22em] text-white/50">Experiment</p>
@@ -11,7 +11,7 @@
               {{ title }}
             </h3>
           </div>
-          <button class="text-white/60 hover:text-white" @click="close">✕</button>
+          <button type="button" aria-label="Close experiment dialog" class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-white/60 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-300" @click="close">✕</button>
         </div>
 
         <div class="px-5 py-4">
@@ -21,22 +21,22 @@
               End & review
             </p>
 
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label class="mb-1 block text-[11px] text-slate-400">End date</label>
                 <input v-model="flow.ctx.value.endDate" type="date"
-                  class="w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-1.5 text-xs text-slate-100" />
+                  class="min-h-11 sm:min-h-0 min-w-0 w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-1.5 text-xs text-slate-100" />
               </div>
             </div>
 
-            <div class="flex items-center justify-end gap-2 pt-2">
+            <div class="flex flex-wrap items-center justify-end gap-2 pt-2">
               <button
-                class="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-100 hover:bg-white/10"
+                class="min-h-11 sm:min-h-0 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-100 hover:bg-white/10"
                 @click="close">
                 Cancel
               </button>
               <button
-                class="rounded-full border border-emerald-500/60 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20"
+                class="min-h-11 sm:min-h-0 rounded-full border border-emerald-500/60 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20"
                 @click="flow.endExperiment">
                 End & Review
               </button>
@@ -65,18 +65,18 @@
             <div>
               <label class="mb-1 block text-[11px] text-slate-400">Optional note</label>
               <textarea v-model="flow.ctx.value.subjectiveNote" rows="3"
-                class="w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-2 text-xs text-slate-100"
+                class="min-h-11 sm:min-h-0 min-w-0 w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-2 text-xs text-slate-100"
                 placeholder="Anything you noticed?" />
             </div>
 
-            <div class="flex items-center justify-end gap-2 pt-2">
+            <div class="flex flex-wrap items-center justify-end gap-2 pt-2">
               <button
-                class="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-100 hover:bg-white/10"
+                class="min-h-11 sm:min-h-0 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-100 hover:bg-white/10"
                 @click="close">
                 Cancel
               </button>
               <button
-                class="rounded-full border border-emerald-500/60 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20 disabled:opacity-50"
+                class="min-h-11 sm:min-h-0 rounded-full border border-emerald-500/60 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20 disabled:opacity-50"
                 :disabled="!flow.ctx.value.subjectiveRating" @click="flow.submitSubjective">
                 Review
               </button>
@@ -187,17 +187,17 @@
 
                     <div class="mt-2 flex flex-wrap gap-2">
                       <button v-for="w in whatWorked" :key="w" type="button"
-                        class="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-white/75 hover:bg-white/10"
+                        class="min-h-11 sm:min-h-0 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-white/75 hover:bg-white/10"
                         @click="removeChip('worked', w)" title="Remove">
                         {{ w }} <span class="opacity-60">×</span>
                       </button>
 
-                      <div class="flex items-center gap-2">
+                      <div class="flex w-full min-w-0 items-center gap-2 sm:w-auto">
                         <input v-model="whatWorkedInput"
-                          class="w-44 rounded-lg border border-white/10 bg-slate-900/60 px-2 py-1 text-[11px] text-white/80"
+                          class="min-h-11 min-w-0 w-full flex-1 sm:min-h-0 sm:w-44 rounded-lg border border-white/10 bg-slate-900/60 px-2 py-1 text-[11px] text-white/80"
                           placeholder="Add…" @keydown.enter.prevent="addChip('worked')" />
                         <button type="button"
-                          class="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[11px] text-white/75 hover:bg-white/10"
+                          class="min-h-11 shrink-0 sm:min-h-0 rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[11px] text-white/75 hover:bg-white/10"
                           @click="addChip('worked')">
                           Add
                         </button>
@@ -212,17 +212,17 @@
 
                     <div class="mt-2 flex flex-wrap gap-2">
                       <button v-for="t in tryNext" :key="t" type="button"
-                        class="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-white/75 hover:bg-white/10"
+                        class="min-h-11 sm:min-h-0 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-white/75 hover:bg-white/10"
                         @click="removeChip('next', t)" title="Remove">
                         {{ t }} <span class="opacity-60">×</span>
                       </button>
 
-                      <div class="flex items-center gap-2">
+                      <div class="flex w-full min-w-0 items-center gap-2 sm:w-auto">
                         <input v-model="tryNextInput"
-                          class="w-44 rounded-lg border border-white/10 bg-slate-900/60 px-2 py-1 text-[11px] text-white/80"
+                          class="min-h-11 min-w-0 w-full flex-1 sm:min-h-0 sm:w-44 rounded-lg border border-white/10 bg-slate-900/60 px-2 py-1 text-[11px] text-white/80"
                           placeholder="Add…" @keydown.enter.prevent="addChip('next')" />
                         <button type="button"
-                          class="rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[11px] text-white/75 hover:bg-white/10"
+                          class="min-h-11 shrink-0 sm:min-h-0 rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-[11px] text-white/75 hover:bg-white/10"
                           @click="addChip('next')">
                           Add
                         </button>
@@ -231,21 +231,21 @@
                   </div>
                 </div>
 
-                <div class="flex items-center justify-end gap-2 pt-1">
+                <div class="flex flex-wrap items-center justify-end gap-2 pt-1">
                   <button
-                    class="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-100 hover:bg-white/10"
+                    class="min-h-11 sm:min-h-0 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-100 hover:bg-white/10"
                     @click="close">
                     Close
                   </button>
 
                   <button
-                    class="rounded-full border border-emerald-500/60 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20"
+                    class="min-h-11 sm:min-h-0 rounded-full border border-emerald-500/60 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20"
                     @click="flow.goNextFocus">
                     What next?
                   </button>
 
                   <button v-if="canFinalize" :disabled="flow.state.value === 'submitting_review'"
-                    class="rounded-full border border-emerald-500/60 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20 disabled:opacity-50"
+                    class="min-h-11 sm:min-h-0 rounded-full border border-emerald-500/60 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20 disabled:opacity-50"
                     @click="onFinalize">
                     Finalize
                   </button>
@@ -259,9 +259,9 @@
             <NextFocusCard :active-experiment="flow.ctx.value.activeExperiment"
               @start-preset="flow.startFromPreset($event)" @open-experiment="$emit('openExperiment')" />
 
-            <div class="flex items-center justify-end gap-2 pt-2">
+            <div class="flex flex-wrap items-center justify-end gap-2 pt-2">
               <button
-                class="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-100 hover:bg-white/10"
+                class="min-h-11 sm:min-h-0 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-100 hover:bg-white/10"
                 @click="close">
                 Close
               </button>
@@ -274,7 +274,7 @@
             <p class="text-[11px] text-slate-400">{{ flow.ctx.value?.error?.message }}</p>
             <div class="flex items-center justify-end pt-2">
               <button
-                class="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-100 hover:bg-white/10"
+                class="min-h-11 sm:min-h-0 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-100 hover:bg-white/10"
                 @click="close">
                 Close
               </button>
@@ -294,14 +294,14 @@
               </div>
             </div>
 
-            <div class="flex items-center justify-end gap-2 pt-2">
+            <div class="flex flex-wrap items-center justify-end gap-2 pt-2">
               <button
-                class="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-100 hover:bg-white/10"
+                class="min-h-11 sm:min-h-0 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-100 hover:bg-white/10"
                 @click="close">
                 Close
               </button>
               <button
-                class="rounded-full border border-emerald-500/60 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20"
+                class="min-h-11 sm:min-h-0 rounded-full border border-emerald-500/60 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20"
                 @click="flow.openEndConfirm()">
                 End & Review
               </button>

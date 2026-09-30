@@ -3,7 +3,7 @@
     v-if="exp && exp.status === 'active'"
     class="rounded-2xl border border-white/10 bg-slate-950/60 px-5 py-5 lg:px-6 lg:py-6 shadow-[0_18px_45px_rgba(0,0,0,0.45)]"
   >
-    <div class="flex items-start justify-between gap-3">
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div>
         <div class="text-xs font-semibold uppercase tracking-[0.16em] text-white/60">
           Experiment in progress

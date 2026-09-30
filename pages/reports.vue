@@ -1,8 +1,8 @@
 <template>
-  <div class="mx-auto max-w-6xl px-4 py-8 lg:py-10 space-y-8">
+  <div class="mx-auto w-full min-w-0 max-w-6xl px-0 py-2 sm:px-4 sm:py-8 lg:py-10 space-y-8">
     <!-- Hero -->
     <section
-      class="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-emerald-500/15 via-slate-900/90 to-sky-500/20 px-6 py-6 lg:px-8 lg:py-7">
+      class="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-emerald-500/15 via-slate-900/90 to-sky-500/20 px-5 py-6 sm:px-6 lg:px-8 lg:py-7">
       <div class="pointer-events-none absolute -right-10 -top-16 h-56 w-56 rounded-full bg-emerald-400/25 blur-3xl" />
       <div class="pointer-events-none absolute -left-16 bottom-0 h-64 w-64 rounded-full bg-sky-500/20 blur-3xl" />
       <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -19,19 +19,21 @@
         </div>
 
 
-        <div class="flex items-center gap-2">
-          <button type="button" class="rounded-full border px-3 py-1.5 text-xs" :class="advanced
+        <div class="flex flex-col items-start gap-2 sm:flex-row sm:items-center">
+          <button type="button" class="min-h-11 sm:min-h-0 rounded-full border px-3 py-1.5 text-xs" :class="advanced
             ? 'border-emerald-400/20 bg-emerald-500/10 text-emerald-200'
             : 'border-white/10 bg-black/10 text-white/70 hover:bg-white/10'" @click="advanced = !advanced">
             {{ advanced ? 'Advanced: ON' : 'Advanced' }}
           </button>
 
-          <button v-for="opt in dayOptions" :key="opt" type="button" class="rounded-full border px-3 py-1.5 text-xs"
+          <div class="flex flex-wrap items-center gap-2">
+          <button v-for="opt in dayOptions" :key="opt" type="button" class="min-h-11 sm:min-h-0 rounded-full border px-3 py-1.5 text-xs"
             :class="days === opt
               ? 'border-emerald-400/20 bg-emerald-500/10 text-emerald-200'
               : 'border-white/10 bg-black/10 text-white/70 hover:bg-white/10'" @click="days = opt">
             {{ opt }}d
           </button>
+          </div>
         </div>
       </div>
     </section>
@@ -44,7 +46,7 @@
 
     <template v-else>
       <!-- Summary -->
-      <section class="grid gap-4 md:grid-cols-4">
+      <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <SummaryTile label="Avg sleep" :value="fmtSleep(report.summary.sleep_avg)"
           :delta="fmtDelta(report.deltas.sleep, 'sleep', report.delta_label)" :show-delta="advanced" />
         <SummaryTile label="Avg mood" :value="fmtNum(report.summary.mood_avg)"
@@ -63,7 +65,7 @@
       <!-- Trends -->
       <section
         class="rounded-2xl border border-white/10 bg-slate-950/60 px-5 py-5 lg:px-6 lg:py-6 shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
-        <div class="flex items-start justify-between gap-4">
+        <div class="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h2 class="text-lg font-semibold text-slate-100">Trends</h2>
             <p class="mt-1 text-xs text-white/55">
@@ -140,7 +142,7 @@
       <!-- Habits performance -->
       <section
         class="rounded-2xl border border-white/10 bg-slate-950/60 px-5 py-5 lg:px-6 lg:py-6 shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
-        <div class="flex items-start justify-between gap-4">
+        <div class="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h2 class="text-lg font-semibold text-slate-100">Habits performance</h2>
             <p class="mt-1 text-xs text-white/55">
@@ -195,7 +197,7 @@
       </section>
 
       <section class="rounded-2xl border border-white/10 bg-slate-950/60 px-5 py-5 lg:px-6 lg:py-6 shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
-  <div class="flex items-start justify-between gap-4">
+  <div class="flex flex-wrap items-start justify-between gap-4">
     <div>
       <h2 class="text-lg font-semibold text-slate-100">What worked</h2>
       <p class="mt-1 text-xs text-white/55">
@@ -215,7 +217,7 @@
 
   <div v-if="advanced" class="mt-4 rounded-xl border border-white/10 bg-black/10 p-4 text-[11px] text-white/70">
     <div class="font-semibold uppercase tracking-[0.16em] text-white/55 mb-2">Correlations</div>
-    <div class="grid gap-2 sm:grid-cols-2">
+    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
       <div>Sleep → Mood: <span class="text-white/90">{{ fmtR(report.correlations.sleep_to_mood) }}</span></div>
       <div>Habits → Stress: <span class="text-white/90">{{ fmtR(report.correlations.habit_completion_to_stress) }}</span></div>
       <div>Sleep → Stress: <span class="text-white/90">{{ fmtR(report.correlations.sleep_to_stress) }}</span></div>
@@ -226,7 +228,7 @@
 
       <section
         class="rounded-2xl border border-white/10 bg-slate-950/60 px-5 py-5 lg:px-6 lg:py-6 shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
-        <div class="flex items-start justify-between gap-4">
+        <div class="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h2 class="text-lg font-semibold text-slate-100">Insights</h2>
             <p class="mt-1 text-xs text-white/55">

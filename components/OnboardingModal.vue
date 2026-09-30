@@ -1,8 +1,8 @@
 <!-- components/OnboardingModal.vue -->
 <template>
-  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
     <div
-      class="w-full max-w-xl rounded-3xl border border-white/10 bg-slate-950/90 px-6 py-7 shadow-[0_30px_80px_rgba(0,0,0,0.6)]"
+      class="max-h-[calc(100dvh-2rem)] overflow-y-auto w-full max-w-xl rounded-3xl border border-white/10 bg-slate-950/90 px-6 py-7 shadow-[0_30px_80px_rgba(0,0,0,0.6)]"
     >
       <h1 class="text-xl font-semibold text-white">
         Welcome to Halo

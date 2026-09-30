@@ -40,23 +40,27 @@ Generating reflections sends relevant wellness context, including journal excerp
 
 ## Screenshots
 
-Planned captures use synthetic data:
+Current interface captures. More screenshots will be added as richer experiment and report data becomes available.
 
-| View | What it shows |
-| --- | --- |
-| Dashboard | Today's snapshot, habits, trends and an active experiment |
-| Mobile check-in | Optional measurements and a short reflection |
-| Experiment review | Baseline comparison alongside personal reflection |
-| Reports | Trends, habit consistency and descriptive patterns |
+### Dashboard
 
-See the [screenshot preparation plan](docs/PORTFOLIO_SCREENSHOT_PLAN.md) for capture states and dimensions.
+Daily snapshot, habits, weekly trends and a daily reflection.
 
-<!-- Uncomment each image only after its file has been added.
-![Halo dashboard with synthetic data](docs/images/dashboard.png)
-![Mobile daily check-in](docs/images/check-in-mobile.png)
-![Personal experiment review](docs/images/experiment-review.png)
-![Halo trends and reports](docs/images/reports.png)
--->
+![Halo dashboard showing a daily snapshot, completed habits, weekly trends and a reflection](docs/images/halo-dashboard.png)
+
+### Next Focus
+
+Suggested small experiments with explanations and actions to get started.
+
+![Halo Next Focus showing suggested experiments for decompression, sleep consistency and outdoor walks](docs/images/halo-next-focus.png)
+
+### Mobile daily check-in
+
+Optional measurements, habits, a short reflection and check-in saving.
+
+<img src="docs/images/FireShot%20Capture%20005%20-%20Halo%20%E2%80%93%20Holistic%20Habit%20&%20AI%20Coach%20-%20%5Blocalhost%5D.png" alt="Halo mobile daily check-in with metric inputs, habits, an active experiment and the save button" width="360">
+
+See the [screenshot preparation plan](docs/PORTFOLIO_SCREENSHOT_PLAN.md) for future capture states and dimensions.
 
 ## Tech Stack
 

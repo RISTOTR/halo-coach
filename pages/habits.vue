@@ -1,8 +1,8 @@
 <template>
-  <div class="mx-auto max-w-6xl px-4 py-8 lg:py-10 space-y-8">
+  <div class="mx-auto w-full min-w-0 max-w-6xl px-0 py-2 sm:px-4 sm:py-8 lg:py-10 space-y-8">
     <!-- Header -->
     <section
-      class="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-emerald-500/15 via-slate-900/90 to-sky-500/20 px-6 py-6 lg:px-8 lg:py-7">
+      class="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-emerald-500/15 via-slate-900/90 to-sky-500/20 px-5 py-6 sm:px-6 lg:px-8 lg:py-7">
       <div class="pointer-events-none absolute -right-10 -top-16 h-56 w-56 rounded-full bg-emerald-400/25 blur-3xl" />
       <div class="pointer-events-none absolute -left-16 bottom-0 h-64 w-64 rounded-full bg-sky-500/20 blur-3xl" />
       <div class="relative">
@@ -19,7 +19,7 @@
       </div>
     </section>
 
-    <section class="grid gap-4 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+    <section class="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
       <!-- Left: list of habits -->
       <div class="rounded-2xl border border-white/10 bg-slate-950/60 px-5 py-5 lg:px-6 lg:py-6 shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
         <div class="flex items-center justify-between">
@@ -47,10 +47,10 @@
           <li
             v-for="habit in activeHabits"
             :key="habit.id"
-            class="flex items-center justify-between rounded-xl border border-white/10 bg-slate-900/80 px-3 py-2"
+            class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-slate-900/80 px-3 py-2"
           >
-            <div class="space-y-1">
-              <div class="flex items-center gap-2">
+            <div class="min-w-0 space-y-1">
+              <div class="flex flex-wrap items-center gap-2">
                 <span class="text-xs font-medium text-slate-100">
                   {{ habit.name }}
                 </span>
@@ -71,10 +71,10 @@
               </div>
             </div>
 
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2">
               <button
                 type="button"
-                class="rounded-full border border-slate-600 px-2 py-0.5 text-[10px] text-slate-300 hover:bg-slate-700/60"
+                class="min-h-11 sm:min-h-0 shrink-0 rounded-full border border-slate-600 px-2 py-0.5 text-[10px] text-slate-300 hover:bg-slate-700/60"
                 @click="archiveHabit(habit.id)"
               >
                 Archive
@@ -97,14 +97,14 @@
             <li
               v-for="habit in archivedHabits"
               :key="habit.id"
-              class="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-900/90 px-3 py-1.5"
+              class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-800 bg-slate-900/90 px-3 py-1.5"
             >
               <span class="text-slate-400">
                 {{ habit.name }}
               </span>
               <button
                 type="button"
-                class="rounded-full border border-slate-600 px-2 py-0.5 text-[10px] text-slate-300 hover:bg-slate-800"
+                class="min-h-11 sm:min-h-0 shrink-0 rounded-full border border-slate-600 px-2 py-0.5 text-[10px] text-slate-300 hover:bg-slate-800"
                 @click="unarchiveHabit(habit.id)"
               >
                 Restore
@@ -130,18 +130,18 @@
               v-model="form.name"
               type="text"
               required
-              class="w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400/70"
+              class="min-h-11 sm:min-h-0 min-w-0 w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400/70"
               placeholder="e.g. Morning sunlight walk"
             />
           </div>
 
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label class="mb-1 block text-slate-200">Category</label>
               <select
                 v-model="form.category"
                 required
-                class="w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400/70"
+                class="min-h-11 sm:min-h-0 min-w-0 w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400/70"
               >
                 <option disabled value="">Select…</option>
                 <option value="body">Body</option>
@@ -155,7 +155,7 @@
               <select
                 v-model="form.frequency"
                 required
-                class="w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400/70"
+                class="min-h-11 sm:min-h-0 min-w-0 w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400/70"
               >
                 <option disabled value="">Select…</option>
                 <option value="daily">Daily</option>
@@ -180,13 +180,13 @@
             </p>
           </div>
 
-          <div class="flex items-center justify-between pt-2">
+          <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between pt-2">
             <div class="text-[10px] text-slate-400 min-h-[1.5rem]">
               {{ formStatus }}
             </div>
             <button
               type="submit"
-              class="rounded-full border border-emerald-500/60 bg-emerald-500/10 px-4 py-1.5 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20 disabled:opacity-60"
+              class="min-h-11 sm:min-h-0 shrink-0 rounded-full border border-emerald-500/60 bg-emerald-500/10 px-4 py-1.5 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20 disabled:opacity-60"
               :disabled="creating"
             >
               <span v-if="creating">Creating…</span>

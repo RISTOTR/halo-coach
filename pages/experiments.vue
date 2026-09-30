@@ -1,6 +1,6 @@
 <template>
-  <div class="mx-auto max-w-6xl px-4 py-8 lg:py-10 space-y-6">
-    <section class="flex items-end justify-between gap-4">
+  <div class="mx-auto w-full min-w-0 max-w-6xl px-0 py-2 sm:px-4 sm:py-8 lg:py-10 space-y-6">
+    <section class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div>
         <p class="text-[12px] font-semibold uppercase tracking-[0.24em] text-white/50">
           Experiments
@@ -21,7 +21,7 @@
     </section>
 
     <section v-if="activeExp" class="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-5 py-4">
-      <div class="flex items-start justify-between gap-3">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div class="min-w-0">
           <div class="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-100/80">
             Active experiment
@@ -68,11 +68,11 @@
 
 
 
-    <section v-else class="grid gap-3">
+    <section v-else class="grid grid-cols-1 gap-3">
       <button v-for="it in items" :key="it.id"
         class="text-left rounded-2xl border border-white/10 bg-slate-950/60 px-5 py-4 hover:bg-slate-950/70"
         @click="open(it.id)">
-        <div class="flex items-start justify-between gap-3">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div class="min-w-0">
             <div class="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/45">
               {{ statusLabel(it.status) }}

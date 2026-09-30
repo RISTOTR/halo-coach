@@ -1,15 +1,15 @@
 <template>
-  <div v-if="modelValue" class="fixed inset-0 z-50">
+  <div v-if="modelValue" class="fixed inset-0 z-50 flex items-center justify-center p-4 [overflow-wrap:anywhere]">
     <div class="absolute inset-0 bg-black/60" @click="close" />
 
-    <div class="absolute left-1/2 top-1/2 w-[92vw] max-w-xl -translate-x-1/2 -translate-y-1/2">
-      <div class="rounded-2xl border border-white/10 bg-slate-950/90 shadow-[0_25px_80px_rgba(0,0,0,0.65)]">
+    <div class="relative w-full min-w-0 max-w-xl" role="dialog" aria-modal="true" aria-label="Experiment">
+      <div class="max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain rounded-2xl border border-white/10 bg-slate-950/90 shadow-[0_25px_80px_rgba(0,0,0,0.65)]">
         <div class="px-5 py-4 border-b border-white/10 flex items-start justify-between gap-3">
           <div>
             <p class="text-[11px] uppercase tracking-[0.22em] text-white/50">Experiment</p>
             <h3 class="mt-1 text-sm font-semibold text-slate-100">Start an experiment</h3>
           </div>
-          <button class="text-white/60 hover:text-white" @click="close">✕</button>
+          <button type="button" aria-label="Close experiment dialog" class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-white/60 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-300" @click="close">✕</button>
         </div>
 
         <div class="px-5 py-4 space-y-4">
@@ -18,7 +18,7 @@
               You already have an active experiment.
             </p>
             <div class="rounded-xl border border-white/10 bg-slate-900/60 px-3 py-2">
-              <p class="text-xs font-medium text-slate-100 truncate">
+              <p class="text-xs font-medium text-slate-100 break-words">
                 {{ activeExperiment?.title }}
               </p>
               <p class="mt-0.5 text-[10px] text-slate-400">
@@ -30,11 +30,11 @@
               Replace it with the new one?
             </p>
 
-            <div class="flex items-center justify-end gap-2 pt-2">
-              <button class="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-100 hover:bg-white/10" @click="backToPresets">
+            <div class="flex flex-wrap items-center justify-end gap-2 pt-2">
+              <button class="min-h-11 sm:min-h-0 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-100 hover:bg-white/10" @click="backToPresets">
                 Keep current
               </button>
-              <button class="rounded-full border border-emerald-500/60 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20" @click="confirmReplace">
+              <button class="min-h-11 sm:min-h-0 rounded-full border border-emerald-500/60 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20" @click="confirmReplace">
                 Replace
               </button>
             </div>
@@ -55,7 +55,7 @@
               >
                 <div class="flex items-start justify-between gap-3">
                   <div class="min-w-0">
-                    <div class="text-xs font-semibold text-slate-100 truncate">{{ p.title }}</div>
+                    <div class="text-xs font-semibold text-slate-100 break-words">{{ p.title }}</div>
                     <div class="mt-1 text-[11px] text-slate-400">
                       {{ p.subtitle }}
                     </div>
@@ -71,8 +71,8 @@
               {{ errorMsg }}
             </div>
 
-            <div class="flex items-center justify-end gap-2 pt-2">
-              <button class="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-100 hover:bg-white/10" @click="close">
+            <div class="flex flex-wrap items-center justify-end gap-2 pt-2">
+              <button class="min-h-11 sm:min-h-0 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-100 hover:bg-white/10" @click="close">
                 Close
               </button>
             </div>

@@ -124,7 +124,7 @@ function effectLabel(diff: number) {
         <div class="text-[11px] uppercase tracking-[0.22em] text-white/50">
           Insights
         </div>
-        <div class="mt-1 flex items-center gap-2">
+        <div class="mt-1 flex flex-wrap items-center gap-2">
           <h3 class="text-sm font-semibold tracking-tight text-white">
             🧠 What Works For You
           </h3>
@@ -164,14 +164,14 @@ function effectLabel(diff: number) {
     <!-- Content -->
     <div v-else class="mt-5 space-y-3">
       <div v-for="s in data.signals" :key="s.lever"
-        class="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-3 py-2">
+        class="relative flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2">
         <div class="min-w-0">
-          <div class="flex items-center gap-2">
+          <div class="flex flex-wrap items-center gap-2">
             <div class="text-sm text-white/85 truncate">
               {{ prettyLever(s.lever) }}
             </div>
 
-            <div class="group relative">
+            <div class="group">
               <button type="button"
                 class="flex h-5 w-5 items-center justify-center rounded-full border border-white/10 bg-white/5 text-[11px] text-white/50 transition hover:bg-white/10 hover:text-white/80"
                 :aria-label="`Why this insight about ${prettyLever(s.lever)}`">
@@ -179,7 +179,7 @@ function effectLabel(diff: number) {
               </button>
 
               <div
-                class="pointer-events-none absolute left-0 top-7 z-30 hidden w-72 rounded-xl border border-white/10 bg-slate-950/95 p-3 shadow-[0_20px_50px_rgba(0,0,0,0.55)] group-hover:block">
+                class="pointer-events-none absolute left-0 top-full z-30 hidden w-full max-w-72 rounded-xl border border-white/10 bg-slate-950/95 p-3 shadow-[0_20px_50px_rgba(0,0,0,0.55)] group-hover:block group-focus-within:block">
                 <div class="text-[11px] uppercase tracking-[0.18em] text-white/40">
                   Why this insight
                 </div>

@@ -3,9 +3,9 @@
     {{ habitError }}
   </div>
 
-  <div class="mx-auto max-w-6xl px-4 py-8 lg:py-10 space-y-8">
+  <div class="mx-auto w-full min-w-0 max-w-6xl px-0 py-2 sm:px-4 sm:py-8 lg:py-10 space-y-8">
     <section
-      class="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-emerald-500/15 via-slate-900/90 to-sky-500/20 px-6 py-6 lg:px-8 lg:py-7">
+      class="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-emerald-500/15 via-slate-900/90 to-sky-500/20 px-5 py-6 sm:px-6 lg:px-8 lg:py-7">
       <div class="pointer-events-none absolute -right-10 -top-16 h-56 w-56 rounded-full bg-emerald-400/25 blur-3xl" />
       <div class="pointer-events-none absolute -left-16 bottom-0 h-64 w-64 rounded-full bg-sky-500/20 blur-3xl" />
 
@@ -38,9 +38,9 @@
 
     <template v-else>
     <!-- Row 1: Snapshot + Insight -->
-    <section class="grid gap-6 lg:grid-cols-3 lg:items-stretch">
+    <section class="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:items-stretch">
       <!-- LEFT COLUMN (2/3): Snapshot + Habits + Patterns -->
-      <div class="space-y-6 lg:col-span-2">
+      <div class="min-w-0 space-y-6 lg:col-span-2">
         <!-- Snapshot -->
         <div>
           <div v-if="loading" class="text-sm text-slate-400">
@@ -64,7 +64,7 @@
         <!-- Habits (move here) -->
         <section
           class="rounded-2xl border border-white/10 bg-slate-950/60 px-5 py-5 lg:px-6 lg:py-6 shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
-          <div class="flex items-end justify-between gap-3 mb-4">
+          <div class="flex flex-wrap items-end justify-between gap-3 mb-4">
             <h2 class="text-lg font-semibold text-slate-100">
               Your habits today
             </h2>
@@ -82,7 +82,7 @@
             </NuxtLink>
           </div>
 
-          <div v-else class="grid gap-4 sm:grid-cols-2 md:grid-cols-3 text-xs">
+          <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 text-xs">
             <!-- show more than 3 to make the section feel real -->
             <div v-for="h in habits.slice(0, 6)" :key="h.id" class="group relative rounded-xl border border-white/10 bg-slate-900/90 py-4 px-3 transition
          hover:bg-slate-900/95 hover:border-white/15">
@@ -91,10 +91,10 @@
                 <div class="min-w-0 flex-1">
                   <div class="flex items-center gap-2 min-w-0">
                     <!-- done indicator -->
-                    <button type="button" class="shrink-0 flex h-6 w-6 items-center justify-center rounded-lg border border-white/10 bg-black/10
+                    <button type="button" class="shrink-0 flex h-11 w-11 sm:h-6 sm:w-6 items-center justify-center rounded-lg border border-white/10 bg-black/10
          text-white/70 hover:bg-white/10"
                       :class="h.completed_today ? 'bg-emerald-500/15 border-emerald-400/20 text-emerald-200' : ''"
-                      :disabled="toggling[h.id]" @click="toggleHabit(h)">
+                      :aria-label="`${h.completed_today ? 'Unmark' : 'Complete'} ${h.name}`" :aria-pressed="h.completed_today" :disabled="toggling[h.id]" @click="toggleHabit(h)">
                       <span v-if="toggling[h.id]" class="text-[10px]">…</span>
                       <span v-else class="text-[12px] leading-none">
                         {{ h.completed_today ? '✓' : '' }}
@@ -189,9 +189,9 @@
       </div>
 
       <!-- RIGHT COLUMN (1/3): Insight (controlled height) -->
-      <div class="lg:col-span-1">
-        <div class="lg:sticky lg:top-24 h-[calc(100vh-20rem)]">
-          <DailyInsightCard :collapsed="true" :max-paragraphs="2" class="h-full" :loading="aiLoading" :error="errors.ai"
+      <div class="min-w-0 lg:col-span-1">
+        <div class="lg:sticky lg:top-24 lg:h-[calc(100vh-20rem)]">
+          <DailyInsightCard :collapsed="true" :max-paragraphs="2" class="lg:h-full" :loading="aiLoading" :error="errors.ai"
             :ai-summary="aiSummary" :metrics="metrics" />
         </div>
       </div>
@@ -221,7 +221,7 @@
         <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" @click="replaceConfirmOpen = false" />
 
         <div
-          class="relative w-full max-w-lg rounded-2xl border border-white/10 bg-slate-950/90 shadow-[0_30px_80px_rgba(0,0,0,0.65)]"
+          class="relative max-h-[calc(100dvh-3rem)] w-full max-w-lg overflow-y-auto rounded-2xl border border-white/10 bg-slate-950/90 shadow-[0_30px_80px_rgba(0,0,0,0.65)]"
           role="dialog" aria-modal="true" aria-label="Replace experiment">
           <div class="flex items-start justify-between gap-4 border-b border-white/10 px-5 py-4">
             <div>
@@ -258,7 +258,7 @@
               </div>
             </div>
 
-            <div class="flex items-center justify-end gap-2 pt-1">
+            <div class="flex flex-wrap items-center justify-end gap-2 pt-1">
               <button type="button"
                 class="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium text-white/80 hover:bg-white/10"
                 @click="replaceConfirmOpen = false">

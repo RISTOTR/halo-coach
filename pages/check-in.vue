@@ -1,9 +1,9 @@
 <!-- pages/check-in.vue -->
 <template>
-  <div class="mx-auto max-w-6xl px-4 py-8 lg:py-10 space-y-8">
+  <div class="mx-auto w-full min-w-0 max-w-6xl px-0 py-2 sm:px-4 sm:py-8 lg:py-10 space-y-8">
     <!-- HERO -->
     <section
-      class="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-emerald-500/15 via-slate-900/90 to-sky-500/20 px-6 py-6 lg:px-8 lg:py-7">
+      class="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-emerald-500/15 via-slate-900/90 to-sky-500/20 px-5 py-6 sm:px-6 lg:px-8 lg:py-7">
       <div class="pointer-events-none absolute -right-10 -top-16 h-56 w-56 rounded-full bg-emerald-400/25 blur-3xl" />
       <div class="pointer-events-none absolute -left-16 bottom-0 h-64 w-64 rounded-full bg-sky-500/20 blur-3xl" />
 
@@ -28,13 +28,13 @@
     </div>
 
     <!-- MAIN GRID -->
-    <section class="grid gap-6 lg:grid-cols-3">
+    <section class="grid grid-cols-1 gap-6 lg:grid-cols-3">
       <!-- LEFT -->
-      <div class="lg:col-span-2 space-y-6">
+      <div class="min-w-0 lg:col-span-2 space-y-6">
         <!-- Core metrics -->
         <div
           class="rounded-2xl border border-white/10 bg-slate-950/60 px-5 py-5 lg:px-6 lg:py-6 shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
-          <div class="mb-3 flex items-start justify-between gap-3">
+          <div class="mb-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h2 class="text-sm font-semibold text-slate-100">Core metrics</h2>
               <p class="mt-1 text-[11px] text-slate-400">
@@ -47,14 +47,14 @@
             </span>
           </div>
 
-          <div class="grid grid-cols-2 gap-3 text-xs">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
             <div>
               <label class="mb-1 block text-slate-300">Sleep (hours)</label>
               <input
                 v-model="sleepHoursRaw"
                 inputmode="decimal"
                 placeholder="e.g. 7.5"
-                class="w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400/70"
+                class="min-h-11 sm:min-h-0 min-w-0 w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-1.5 text-base sm:text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400/70"
               />
             </div>
 
@@ -64,7 +64,7 @@
                 v-model.number="movementMinutes"
                 type="number"
                 min="0"
-                class="w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400/70"
+                class="min-h-11 sm:min-h-0 min-w-0 w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-1.5 text-base sm:text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400/70"
               />
             </div>
           </div>
@@ -73,7 +73,7 @@
             <div>
               <label class="mb-1 block text-slate-300">Mood</label>
               <select v-model.number="mood"
-                class="w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400/70">
+                class="min-h-11 sm:min-h-0 min-w-0 w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-1.5 text-base sm:text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400/70">
                 <option :value="null">–</option>
                 <option v-for="n in 5" :key="'m' + n" :value="n">{{ n }}</option>
               </select>
@@ -82,7 +82,7 @@
             <div>
               <label class="mb-1 block text-slate-300">Energy</label>
               <select v-model.number="energy"
-                class="w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400/70">
+                class="min-h-11 sm:min-h-0 min-w-0 w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-1.5 text-base sm:text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400/70">
                 <option :value="null">–</option>
                 <option v-for="n in 5" :key="'e' + n" :value="n">{{ n }}</option>
               </select>
@@ -91,28 +91,28 @@
             <div>
               <label class="mb-1 block text-slate-300">Stress</label>
               <select v-model.number="stress"
-                class="w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400/70">
+                class="min-h-11 sm:min-h-0 min-w-0 w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-1.5 text-base sm:text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400/70">
                 <option :value="null">–</option>
                 <option v-for="n in 5" :key="'s' + n" :value="n">{{ n }}</option>
               </select>
             </div>
           </div>
 
-          <div class="mt-3 grid grid-cols-2 gap-3 text-xs">
+          <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
             <div>
               <label class="mb-1 block text-slate-300">Water (L)</label>
               <input
                 v-model="waterLitersRaw"
                 inputmode="decimal"
                 placeholder="e.g. 1.5"
-                class="w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400/70"
+                class="min-h-11 sm:min-h-0 min-w-0 w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-1.5 text-base sm:text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400/70"
               />
             </div>
 
             <div>
               <label class="mb-1 block text-slate-300">Outdoor time (min)</label>
               <input v-model.number="outdoorMinutes" type="number" min="0"
-                class="w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400/70" />
+                class="min-h-11 sm:min-h-0 min-w-0 w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-1.5 text-base sm:text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400/70" />
             </div>
           </div>
 
@@ -123,7 +123,7 @@
             </div>
 
             <textarea v-model="note" rows="4"
-              class="w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400/70"
+              class="min-h-11 sm:min-h-0 min-w-0 w-full rounded-lg border border-white/15 bg-slate-900/80 px-2 py-2 text-base sm:text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400/70"
               placeholder="What stood out about today?" />
           </div>
         </div>
@@ -151,7 +151,7 @@
 
           <div v-else class="mt-2 space-y-2 text-xs">
             <label v-for="h in habits" :key="h.id"
-              class="flex items-center justify-between gap-3 rounded-lg border border-white/15 bg-slate-900/80 px-3 py-2">
+              class="flex min-h-11 items-center justify-between gap-3 rounded-lg border border-white/15 bg-slate-900/80 px-3 py-2">
               <div class="min-w-0">
                 <p class="font-medium text-slate-100 truncate">{{ h.name }}</p>
                 <p class="text-[10px] text-slate-400">
@@ -159,7 +159,7 @@
                 </p>
               </div>
 
-              <input type="checkbox" class="h-4 w-4 rounded border-slate-600 bg-slate-900" :value="h.id"
+              <input type="checkbox" class="h-5 w-5 shrink-0 rounded border-slate-600 bg-slate-900" :value="h.id"
                 v-model="selectedHabitIds" />
             </label>
 
@@ -171,7 +171,7 @@
       </div>
 
       <!-- RIGHT -->
-      <div class="space-y-6">
+      <div class="min-w-0 space-y-6">
         <!-- Experiment -->
         <div class="rounded-2xl border border-white/10 bg-slate-950/60 px-5 py-4 shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
           <div class="flex items-start justify-between gap-3">
@@ -210,16 +210,16 @@
               </p>
             </div>
 
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2">
               <button
-                class="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-100 hover:bg-white/10"
+                class="min-h-11 sm:min-h-0 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-100 hover:bg-white/10"
                 @click="openExperimentDialog"
               >
                 View / end
               </button>
 
               <button
-                class="rounded-full border border-emerald-500/60 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20"
+                class="min-h-11 sm:min-h-0 rounded-full border border-emerald-500/60 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20"
                 @click="openExperimentDialog"
               >
                 End & review
@@ -232,7 +232,7 @@
               No active experiment right now.
             </p>
             <button
-              class="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-100 hover:bg-white/10"
+              class="min-h-11 sm:min-h-0 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-slate-100 hover:bg-white/10"
               @click="openExperimentStart"
             >
               Start an experiment
@@ -246,13 +246,13 @@
 
         <!-- Actions -->
         <div class="rounded-2xl border border-white/10 bg-slate-950/60 px-5 py-4 shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
-          <div class="flex items-center justify-between gap-3">
+          <div class="flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-center">
             <div class="text-[11px] text-slate-400 min-h-[1.25rem]">
               {{ statusMessage }}
             </div>
 
             <button
-              class="rounded-full border border-emerald-500/60 bg-emerald-500/10 px-4 py-1.5 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20 disabled:opacity-50"
+              class="min-h-11 sm:min-h-0 rounded-full border border-emerald-500/60 bg-emerald-500/10 px-4 py-1.5 text-xs font-medium text-emerald-100 hover:bg-emerald-500/20 disabled:opacity-50"
               @click.prevent="handleSubmit"
               :disabled="saving || habitsLoading"
               title="Save your check-in and refresh the AI reflection"

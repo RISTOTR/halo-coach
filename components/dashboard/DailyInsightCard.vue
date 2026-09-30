@@ -164,7 +164,7 @@
         <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" @click="closeModal" />
 
         <div
-          class="relative w-full max-w-2xl rounded-2xl border border-white/10 bg-slate-950/90 shadow-[0_30px_80px_rgba(0,0,0,0.65)]"
+          class="relative max-h-[calc(100dvh-3rem)] overflow-y-auto w-full max-w-2xl rounded-2xl border border-white/10 bg-slate-950/90 shadow-[0_30px_80px_rgba(0,0,0,0.65)]"
           role="dialog" aria-modal="true" aria-label="Full reflection">
           <div class="flex items-start justify-between gap-4 border-b border-white/10 px-5 py-4">
             <div>
@@ -181,7 +181,7 @@
             </button>
           </div>
 
-          <div class="max-h-[70vh] overflow-auto px-5 py-4">
+          <div class="lg:max-h-[70vh] lg:overflow-auto px-5 py-4">
             <div class="space-y-3 text-sm leading-relaxed text-slate-200">
               <SafeMarkdown :content="paragraphs.join('\n\n')" />
             </div>

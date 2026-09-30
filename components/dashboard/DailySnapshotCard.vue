@@ -4,7 +4,7 @@
     class="rounded-2xl border border-white/10 bg-slate-950/60 px-5 py-5 lg:px-6 lg:py-6 shadow-[0_18px_45px_rgba(0,0,0,0.45)]"
   >
     <!-- Header ------------------------------------------------ -->
-    <div class="mb-4 flex items-start justify-between gap-3">
+    <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div>
         <h2 class="text-lg font-semibold text-slate-100 mb-3">
           {{ label || "Today’s snapshot" }}
@@ -14,12 +14,12 @@
         </p>
       </div>
 
-      <div class="flex flex-col items-end gap-1 text-right">
+      <div class="flex flex-wrap items-center gap-2 sm:flex-col sm:items-end sm:gap-1 sm:text-right">
         <span class="text-[11px] text-white/40">
           {{ formattedDate }}
         </span>
         <span
-          class="inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-emerald-400/10 px-2 py-0.5 text-[11px] font-medium text-emerald-100"
+          class="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-emerald-400/40 bg-emerald-400/10 px-2 py-0.5 text-[11px] font-medium text-emerald-100"
         >
           <span class="h-1.5 w-1.5 rounded-full bg-emerald-300" />
           {{ dayLabel }}
